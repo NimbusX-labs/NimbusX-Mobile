@@ -1,0 +1,23 @@
+export const colors = {
+  primaryBackground: '#15202B',
+  secondaryBackground: '#192734',
+  cardBackground: '#22303C',
+  primaryAccent: '#1DA1F2',
+  textPrimary: '#E7E9EA',
+  textSecondary: '#8899A6',
+  divider: '#38444D',
+  error: '#F4212E',
+  white: '#FFFFFF',
+  black: '#000000',
+  transparent: 'transparent',
+  success: '#17BF63',
+  warning: '#FFAD1F',
+  info: '#1DA1F2',
+  messageStatus: {
+    sent: '#8899A6',
+    delivered: '#8899A6',
+    read: '#1DA1F2',
+  },
+  online: '#17BF63',
+  offline: '#8899A6',
+};

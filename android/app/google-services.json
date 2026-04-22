@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "748106728814",
+    "project_id": "nimbusx-ae1a6",
+    "storage_bucket": "nimbusx-ae1a6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:748106728814:android:dab191f856457c2ca0ed7f",
+        "android_client_info": {
+          "package_name": "com.nimbusx"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXMpdehpLZE7hw3XmpmNdHG2WoZTbGi_g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

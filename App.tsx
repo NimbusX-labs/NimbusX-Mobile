@@ -1,45 +1,58 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React, { useEffect, useState } from 'react';
+import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
+import { StatusBar, LogBox, View, ActivityIndicator } from 'react-native';
+import { store, persistor } from '@store/index';
+import AppNavigator from '@navigation/AppNavigator';
+import ErrorBoundary from '@components/common/ErrorBoundary';
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+// Silence noisy development-only warnings
+LogBox.ignoreLogs([
+  'This method is deprecated (as well as all React Native Firebase namespaced API)',
+  'SafeAreaView has been deprecated and will be removed in a future release',
+  'InteractionManager has been deprecated and will be removed in a future release',
+]);
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+const LoadingFallback = () => (
+  <View style={{ flex: 1, backgroundColor: '#15202B', justifyContent: 'center', alignItems: 'center' }}>
+    <ActivityIndicator color="#1DA1F2" size="large" />
+  </View>
+);
+
+// Safety wrapper: if PersistGate hangs for > 3s, skip it and render the app anyway.
+// This prevents the black screen caused by AsyncStorage rehydration failures.
+const SafePersistGate = ({ children }: { children: React.ReactNode }) => {
+  const [timedOut, setTimedOut] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setTimedOut(true);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (timedOut) {
+    return <>{children}</>;
+  }
 
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
-    </SafeAreaProvider>
+    <PersistGate loading={<LoadingFallback />} persistor={persistor}>
+      {children}
+    </PersistGate>
   );
-}
+};
 
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
+const App = () => {
   return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
+    <Provider store={store}>
+      <SafePersistGate>
+        <ErrorBoundary>
+          <StatusBar barStyle="light-content" backgroundColor="#15202B" />
+          <AppNavigator />
+        </ErrorBoundary>
+      </SafePersistGate>
+    </Provider>
   );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
+};
 
 export default App;

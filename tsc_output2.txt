@@ -1,0 +1,1 @@
+﻿tsconfig.json(2,14): error TS6053: File '@react-native/typescript-config/tsconfig.json' not found.

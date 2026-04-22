@@ -107,13 +107,29 @@ android {
     }
 }
 
-dependencies {
-    // The version of react-native is set by the React Native Gradle Plugin
-    implementation("com.facebook.react:react-android")
+    dependencies {
+        // The version of react-native is set by the React Native Gradle Plugin
+        implementation("com.facebook.react:react-android")
 
-    if (hermesEnabled.toBoolean()) {
-        implementation("com.facebook.react:hermes-android")
-    } else {
-        implementation jscFlavor
+        // Firebase BoM
+        implementation platform('com.google.firebase:firebase-bom:34.9.0')
+
+        // Add the dependencies for any other desired Firebase products
+        // https://firebase.google.com/docs/android/setup#available-libraries
+        implementation 'com.google.firebase:firebase-analytics'
+        implementation 'com.google.firebase:firebase-auth'
+        implementation 'com.google.firebase:firebase-firestore'
+        implementation 'com.google.firebase:firebase-database'
+        implementation 'com.google.firebase:firebase-storage'
+
+        if (hermesEnabled.toBoolean()) {
+            implementation("com.facebook.react:hermes-android")
+        } else {
+            implementation jscFlavor
+        }
     }
-}
+
+apply plugin: "com.google.gms.google-services"
+
+// Ensure vector icon fonts (Ionicons, etc.) are bundled on Android
+apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
