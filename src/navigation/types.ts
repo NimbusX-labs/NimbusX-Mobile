@@ -18,6 +18,10 @@ export type ChatStackParamList = {
   CreateGroup: undefined;
   GroupInfo: { chatId: string };
   Profile: undefined;
+  AccountSettings: undefined;
+  ChatsSettings: undefined;
+  NotificationsSettings: undefined;
+  HelpSettings: undefined;
 };
 
 export type RootStackParamList = {

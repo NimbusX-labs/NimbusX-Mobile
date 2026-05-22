@@ -14,6 +14,11 @@ import GroupChatScreen from '@screens/groups/GroupChatScreen';
 import GroupInfoScreen from '@screens/groups/GroupInfoScreen';
 import ProfileScreen from '@screens/settings/ProfileScreen';
 
+import AccountSettingsScreen from '@screens/settings/AccountSettingsScreen';
+import ChatsSettingsScreen from '@screens/settings/ChatsSettingsScreen';
+import NotificationsSettingsScreen from '@screens/settings/NotificationsSettingsScreen';
+import HelpSettingsScreen from '@screens/settings/HelpSettingsScreen';
+
 const Stack = createStackNavigator<ChatStackParamList>();
 
 const ChatNavigator = () => {
@@ -42,6 +47,10 @@ const ChatNavigator = () => {
       <Stack.Screen name="CreateGroup" component={CreateGroupScreen} />
       <Stack.Screen name="GroupInfo" component={GroupInfoScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="AccountSettings" component={AccountSettingsScreen} options={{ title: 'Account' }} />
+      <Stack.Screen name="ChatsSettings" component={ChatsSettingsScreen} options={{ title: 'Chats' }} />
+      <Stack.Screen name="NotificationsSettings" component={NotificationsSettingsScreen} options={{ title: 'Notifications' }} />
+      <Stack.Screen name="HelpSettings" component={HelpSettingsScreen} options={{ title: 'Help' }} />
     </Stack.Navigator>
   );
 };

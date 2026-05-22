@@ -16,7 +16,7 @@ export interface Message {
   createdAt: number;
   status: 'pending' | 'sent' | 'delivered' | 'read' | 'failed';
   mediaUrl?: string;
-  mediaType?: 'image' | 'video' | 'audio' | 'file';
+  mediaType?: 'image' | 'video' | 'audio' | 'file' | 'gif' | 'sticker';
   mediaPublicId?: string; // Cloudinary public_id
   mediaSize?: number;     // File size in bytes
   mediaUploadedAt?: number;
@@ -29,6 +29,7 @@ export interface Chat {
   type: 'one-to-one' | 'group';
   members: string[];
   name?: string;
+  description?: string;
   avatarUrl?: string;
   lastMessage?: string;
   lastMessageAt?: number;
@@ -36,6 +37,8 @@ export interface Chat {
   unreadCount?: { [uid: string]: number };
   typing?: { [uid: string]: boolean };
   admins?: { [uid: string]: boolean };
+  createdBy?: string;
+  createdAt?: number;
 }
 
 export interface Group extends Chat {

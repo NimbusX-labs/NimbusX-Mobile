@@ -61,6 +61,9 @@ export const useAuth = () => {
     try {
       await authService.signOut();
       dispatch(logout());
+      // Purge all persisted data so contacts/messages don't leak to the next account
+      const { persistor } = require('@store/index');
+      await persistor.purge();
     } catch (err: any) {
       console.error('Logout failed:', err);
     }
