@@ -105,9 +105,11 @@ const ChatScreen = () => {
         status: 'sent',
       });
       firestoreService.setTypingStatus(chatId, user.uid, false);
-      // Real-time listener will replace the temp message via Firestore ID update
+      // Update the optimistic temp message to 'sent' so the tick appears immediately
+      dispatch(upsertMessage({ ...tempMsg, status: 'sent' }));
     } catch (error) {
       console.error('Failed to send message:', error);
+      dispatch(upsertMessage({ ...tempMsg, status: 'failed' }));
       dispatch(addToOfflineQueue(tempMsg));
     }
   };
@@ -200,6 +202,74 @@ const ChatScreen = () => {
     }
   };
 
+  // ── Send GIF ──────────────────────────────────────────────────
+  const handleSendGif = async (gif: { url: string }) => {
+    if (!user) return;
+
+    const tempMsg: any = {
+      id: `temp_${Date.now()}`,
+      chatId,
+      senderId: user.uid,
+      text: '',
+      mediaUrl: gif.url,
+      mediaType: 'gif',
+      createdAt: Date.now(),
+      status: 'pending',
+    };
+
+    dispatch(upsertMessage(tempMsg));
+
+    try {
+      await firestoreService.sendMessage({
+        chatId,
+        senderId: user.uid,
+        text: '',
+        mediaUrl: gif.url,
+        mediaType: 'gif',
+        createdAt: Date.now(),
+        status: 'sent',
+      });
+      dispatch(upsertMessage({ ...tempMsg, status: 'sent' }));
+    } catch (error) {
+      console.error('Failed to send GIF:', error);
+      dispatch(upsertMessage({ ...tempMsg, status: 'failed' }));
+    }
+  };
+
+  // ── Send Sticker ──────────────────────────────────────────────
+  const handleSendSticker = async (sticker: { url: string }) => {
+    if (!user) return;
+
+    const tempMsg: any = {
+      id: `temp_${Date.now()}`,
+      chatId,
+      senderId: user.uid,
+      text: '',
+      mediaUrl: sticker.url,
+      mediaType: 'sticker',
+      createdAt: Date.now(),
+      status: 'pending',
+    };
+
+    dispatch(upsertMessage(tempMsg));
+
+    try {
+      await firestoreService.sendMessage({
+        chatId,
+        senderId: user.uid,
+        text: '',
+        mediaUrl: sticker.url,
+        mediaType: 'sticker',
+        createdAt: Date.now(),
+        status: 'sent',
+      });
+      dispatch(upsertMessage({ ...tempMsg, status: 'sent' }));
+    } catch (error) {
+      console.error('Failed to send sticker:', error);
+      dispatch(upsertMessage({ ...tempMsg, status: 'failed' }));
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView 
@@ -224,7 +294,13 @@ const ChatScreen = () => {
             typingUsers.length > 0 ? <TypingIndicator typingUsers={typingUsers} /> : null
           }
         />
-        <ChatInput onSend={handleSend} onTyping={handleTyping} onSendMedia={handleSendMedia} />
+        <ChatInput
+          onSend={handleSend}
+          onTyping={handleTyping}
+          onSendMedia={handleSendMedia}
+          onSendGif={handleSendGif}
+          onSendSticker={handleSendSticker}
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

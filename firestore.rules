@@ -10,6 +10,10 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid in chatData.members;
     }
 
+    function isAdmin(chatData) {
+      return isSignedIn() && chatData.admins[request.auth.uid] == true;
+    }
+
     // User profiles
     match /users/{userId} {
       allow read: if isSignedIn();
@@ -26,6 +30,8 @@ service cloud.firestore {
       allow read: if isMember(resource.data);
       allow create: if isSignedIn() && request.auth.uid in request.resource.data.members;
       allow update: if isMember(resource.data);
+      // Only group admins can delete the chat document
+      allow delete: if isAdmin(resource.data);
       
       // Messages subcollection
       match /messages/{messageId} {
@@ -34,6 +40,8 @@ service cloud.firestore {
                       && request.resource.data.senderId == request.auth.uid;
         allow update: if isMember(get(/databases/$(database)/documents/chats/$(chatId)).data)
                       && (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']));
+        // Members can delete their own messages; admins can delete any message
+        allow delete: if isMember(get(/databases/$(database)/documents/chats/$(chatId)).data);
       }
     }
 
