@@ -1,0 +1,328 @@
+oh-my-posh : The term 'oh-my-posh' is not recognized as the name of a cmdlet, function, script file, or operable 
+program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At C:\Users\prem\OneDrive\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1:1 char:1
++ oh-my-posh init pwsh --config "$env:POSH_THEMES_PATH\paradox.omp.json ...
++ ~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (oh-my-posh:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+INFO         | Android emulator version 36.2.11.0 (build_id 14212360) (CL:N/A)
+INFO         | Graphics backend: gfxstream
+INFO         | Found systemPath C:\Users\prem\AppData\Local\Android\Sdk\system-images\android-36\google_apis_playstore\x86_64\
+WARNING      | Please update the emulator to one that supports the feature(s): VulkanVirtualQueue
+INFO         | IPv4 server found: 8.8.8.8
+INFO         | Ignore IPv6 address: b0c5:a9f1:e901:0:50c0:a9f1:e901:0
+INFO         | Ignore IPv6 address: b0c5:a9f1:e901:0:50c0:a9f1:e901:0
+INFO         | Ignore IPv6 address: b0c5:a9f1:e901:0:50c0:a9f1:e901:0
+INFO         | Ignore IPv6 address: c8cb:a9f1:e901:0:50c0:a9f1:e901:0
+INFO         | Ignore IPv6 address: c8cb:a9f1:e901:0:50c0:a9f1:e901:0
+INFO         | Ignore IPv6 address: c8cb:a9f1:e901:0:50c0:a9f1:e901:0
+INFO         | Ignore IPv6 address: e0d1:a9f1:e901:0:50c0:a9f1:e901:0
+INFO         | Ignore IPv6 address: e0d1:a9f1:e901:0:50c0:a9f1:e901:0
+INFO         | Ignore IPv6 address: e0d1:a9f1:e901:0:50c0:a9f1:e901:0
+INFO         | Ignore IPv6 address: 10da:a9f1:e901:0:50c0:a9f1:e901:0
+INFO         | Ignore IPv6 address: 10da:a9f1:e901:0:50c0:a9f1:e901:0
+INFO         | Ignore IPv6 address: 10da:a9f1:e901:0:50c0:a9f1:e901:0
+INFO         | Ignore IPv6 address: 38ed:a9f1:e901:0:50c0:a9f1:e901:0
+INFO         | Ignore IPv6 address: 38ed:a9f1:e901:0:50c0:a9f1:e901:0
+INFO         | Ignore IPv6 address: 38ed:a9f1:e901:0:50c0:a9f1:e901:0
+INFO         | Ignore IPv6 address: 58f3:a9f1:e901:0:50c0:a9f1:e901:0
+INFO         | Ignore IPv6 address: 58f3:a9f1:e901:0:50c0:a9f1:e901:0
+INFO         | Ignore IPv6 address: 58f3:a9f1:e901:0:50c0:a9f1:e901:0
+INFO         | Guest GLES Driver: Auto (ext controls)
+library_mode host gpu mode host
+INFO         | emuglConfig_get_vulkan_hardware_gpu_support_info: Found physical GPU 'Intel(R) UHD Graphics', type: VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU, apiVersion: 1.3.275, driverVersion: 0.405.1237
+
+INFO         | emuglConfig_get_vulkan_hardware_gpu_support_info: Found physical GPU 'NVIDIA GeForce RTX 2050', type: VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU, apiVersion: 1.4.303, driverVersion: 572.70
+
+INFO         | GPU device local memory = 3964MB
+INFO         | Checking system compatibility:
+INFO         |   Checking: hasCompatibleHypervisor
+INFO         |      Ok: Hypervisor compatibility to run avd: `Pixel_8a` are met
+INFO         |   Checking: hasSufficientSystem
+INFO         |      Ok: System requirements to run avd: `Pixel_8a` are met
+INFO         |   Checking: hasSufficientHwGpu
+INFO         |      Ok: Hardware GPU requirements to run avd: `Pixel_8a` are passed
+INFO         |   Checking: hasSufficientDiskSpace
+INFO         |      Ok: Disk space requirements to run avd: `Pixel_8a` are met
+INFO         | Critical: Failed to load opengl32sw (The specified module could not be found.) (:0, )
+INFO         | Warning: Software OpenGL failed. Falling back to system OpenGL. (:0, )
+INFO         | Warning: QMetaObject::connectSlotsByName: No matching signal for on_btn_xr_environment_living_room_day_clicked() (:0, )
+INFO         | Warning: QMetaObject::connectSlotsByName: No matching signal for on_btn_xr_environment_living_room_night_clicked() (:0, )
+INFO         | Warning: QMetaObject::connectSlotsByName: No matching signal for on_new_posture_requested(int) (:0, )
+INFO         | Warning: QMetaObject::connectSlotsByName: No matching signal for on_dismiss_posture_selection_dialog() (:0, )
+INFO         | Warning: QMetaObject::connectSlotsByName: No matching signal for on_new_resizable_requested(PresetEmulatorSizeType) (:0, )
+INFO         | Warning: QMetaObject::connectSlotsByName: No matching signal for on_dismiss_resizable_dialog() (:0, )
+INFO         | Warning: QMetaObject::connectSlotsByName: No matching signal for on_xr_environment_mode_changed(int) (:0, )
+INFO         | Warning: QMetaObject::connectSlotsByName: No matching signal for on_dismiss_xr_environment_mode_dialog() (:0, )
+INFO         | Warning: QMetaObject::connectSlotsByName: No matching signal for on_xr_input_mode_changed(int) (:0, )
+INFO         | Warning: QMetaObject::connectSlotsByName: No matching signal for on_dismiss_xr_input_mode_dialog() (:0, )
+INFO         | Warning: QMetaObject::connectSlotsByName: No matching signal for on_sleep_timer_done() (:0, )
+INFO         | Warning: QMetaObject::connectSlotsByName: No matching signal for on_unfold_timer_done() (:0, )
+INFO         | Storing crashdata in: C:\Users\prem\AppData\Local\Temp\\AndroidEmulator\emu-crash-36.2.11.db, detection is enabled for process: 13748
+INFO         | Crash reports will be automatically uploaded to: https://clients2.google.com/cr/report
+INFO         | Initializing hardware OpenGLES emulation support
+INFO         | android_startOpenglesRenderer: gpu info
+INFO         | GPU #1
+  Make: 8086
+  Model: Intel(R) UHD Graphics
+  Device ID: 9a68
+
+INFO         | HealthMonitor disabled.
+INFO         | SharedLibrary::open for [vulkan-1.dll]
+INFO         | SharedLibrary::open for [vulkan-1.dll]: not found in map, open for the first time
+INFO         | SharedLibrary::open for [vulkan-1.dll] (win32): call LoadLibrary
+INFO         | SharedLibrary::open succeeded for [vulkan-1.dll]. File name: [C:\WINDOWS\SYSTEM32\vulkan-1.dll]
+INFO         | Added library: vulkan-1.dll
+INFO         | Selecting Vulkan device: NVIDIA GeForce RTX 2050, Version: 1.4.303
+INFO         | Disabling sparse binding feature support
+INFO         | SharedLibrary::open for [opengl32.dll]: not found in map, open for the first time
+INFO         | SharedLibrary::open for [opengl32.dll] (win32): call LoadLibrary
+INFO         | SharedLibrary::open succeeded for [opengl32.dll]. File name: [C:\WINDOWS\SYSTEM32\opengl32.DLL]
+INFO         | SharedLibrary::open for [libshadertranslator.dll]: not found in map, open for the first time
+INFO         | SharedLibrary::open for [libshadertranslator.dll] (win32): call LoadLibrary
+INFO         | SharedLibrary::open succeeded for [libshadertranslator.dll]. File name: [C:\Users\prem\AppData\Local\Android\Sdk\emulator\lib64\libshadertranslator.dll]
+INFO         | Initializing VkEmulation features:
+INFO         |     glInteropSupported: false
+INFO         |     useDeferredCommands: true
+INFO         |     createResourceWithRequirements: true
+INFO         |     useVulkanComposition: false
+INFO         |     useVulkanNativeSwapchain: false
+INFO         |     enable guestRenderDoc: false
+INFO         |     ASTC LDR emulation mode: Gpu
+INFO         |     enable ETC2 emulation: true
+INFO         |     enable Ycbcr emulation: false
+INFO         |     guestVulkanOnly: false
+INFO         |     useDedicatedAllocations: false
+INFO         | Graphics Adapter Vendor Google (Intel)
+INFO         | Graphics Adapter Android Emulator OpenGL ES Translator (Intel(R) UHD Graphics)
+INFO         | Graphics API Version OpenGL ES 3.0 (4.5.0 - Build 31.0.101.5333)
+INFO         | Graphics API Extensions GL_OES_EGL_sync GL_OES_EGL_image GL_OES_EGL_image_external GL_OES_depth24 GL_OES_depth32 GL_OES_element_index_uint GL_OES_texture_float GL_OES_texture_float_linear GL_OES_compressed_paletted_texture GL_OES_compressed_ETC1_RGB8_texture GL_OES_depth_texture GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_OES_packed_depth_stencil GL_OES_vertex_half_float GL_OES_texture_npot GL_OES_rgb8_rgba8 GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_texture_format_BGRA8888 GL_APPLE_texture_format_BGRA8888 
+INFO         | Graphics Device Extensions N/A
+INFO         | Sending adb public key [QAAAAMEalZu/ipU5D0snDCS0ifzyn7uPXH9ARBA3MfqlX5svl6symI5VyQkCwQU2yxtgFFR9qZBezBWOcAcBYjJagqNfm1j/6V72oe+RajgRSfW0jnwUSzlfdl5BxkuM0iEh40sjKoxBCYpTpevtCjfUI8FMfPpF3Q+VBDyjviURHcYBWONV1/r8WOZpD3tOmKWinMDcl1p7kcJyIDTK7n1n0CRLEZNlJMB0YC/EnYfVA6ynntqWxkamRGAnWfoqc6R+F4HqmVI+YToXIYMAVqND7enNbKKHWSiFHCkVwhr5BDSv/Pj+coDsOys6mGFFAY4Jlyeu6BEfsoU76xhl316YQ4vJNwHRL9kDe5DQE2CxRtNqL0f83uHGaXW4oZkqxwaqjraGYzIjVFz3w7b9ygpsukANc8LKvZMnTsIXBwU6C9ksOjJtp71qKnPHfPuS4QvB6WHXAJHahKicWhDbcOk52EWKrV5dSQK1+GYw3XyvXBZxUSg0QsAZjWeX/KTUXywfWhjRh/eAKnPBbqDybT6arZWbxP0Q/pSPv6lD60ELFoBeMAJ2TgHi+vKy2owCyMMe+AtHi/zYHwgIFQ3QB2u6/mLgZa6KOEs6ftmqnDPXj4ycQ0ZSURa1RQT0MLghQr6MLJHD2G+YtG/4grQKTqsu6xZ5IdPH2OELb67QbjkelXBShO7NHQEAAQA= @unknown]
+INFO         | Userspace boot properties:
+INFO         |   androidboot.boot_devices=pci0000:00/0000:00:03.0 pci0000:00/0000:00:06.0
+INFO         |   androidboot.dalvik.vm.heapsize=512m
+INFO         |   androidboot.debug.hwui.renderer=skiagl
+INFO         |   androidboot.hardware=ranchu
+INFO         |   androidboot.hardware.gltransport=pipe
+INFO         |   androidboot.hardware.vulkan=ranchu
+INFO         |   androidboot.logcat=*:V
+INFO         |   androidboot.opengles.version=196608
+INFO         |   androidboot.qemu=1
+INFO         |   androidboot.qemu.adb.pubkey=QAAAAMEalZu/ipU5D0snDCS0ifzyn7uPXH9ARBA3MfqlX5svl6symI5VyQkCwQU2yxtgFFR9qZBezBWOcAcBYjJagqNfm1j/6V72oe+RajgRSfW0jnwUSzlfdl5BxkuM0iEh40sjKoxBCYpTpevtCjfUI8FMfPpF3Q+VBDyjviURHcYBWONV1/r8WOZpD3tOmKWinMDcl1p7kcJyIDTK7n1n0CRLEZNlJMB0YC/EnYfVA6ynntqWxkamRGAnWfoqc6R+F4HqmVI+YToXIYMAVqND7enNbKKHWSiFHCkVwhr5BDSv/Pj+coDsOys6mGFFAY4Jlyeu6BEfsoU76xhl316YQ4vJNwHRL9kDe5DQE2CxRtNqL0f83uHGaXW4oZkqxwaqjraGYzIjVFz3w7b9ygpsukANc8LKvZMnTsIXBwU6C9ksOjJtp71qKnPHfPuS4QvB6WHXAJHahKicWhDbcOk52EWKrV5dSQK1+GYw3XyvXBZxUSg0QsAZjWeX/KTUXywfWhjRh/eAKnPBbqDybT6arZWbxP0Q/pSPv6lD60ELFoBeMAJ2TgHi+vKy2owCyMMe+AtHi/zYHwgIFQ3QB2u6/mLgZa6KOEs6ftmqnDPXj4ycQ0ZSURa1RQT0MLghQr6MLJHD2G+YtG/4grQKTqsu6xZ5IdPH2OELb67QbjkelXBShO7NHQEAAQA= @unknown
+INFO         |   androidboot.qemu.avd_name=Pixel_8a
+INFO         |   androidboot.qemu.camera_hq_edge_processing=0
+INFO         |   androidboot.qemu.camera_protocol_ver=1
+INFO         |   androidboot.qemu.cpuvulkan.version=4202496
+INFO         |   androidboot.qemu.gltransport.drawFlushInterval=800
+INFO         |   androidboot.qemu.gltransport.name=pipe
+INFO         |   androidboot.qemu.hwcodec.avcdec=2
+INFO         |   androidboot.qemu.hwcodec.hevcdec=2
+INFO         |   androidboot.qemu.hwcodec.vpxdec=2
+INFO         |   androidboot.qemu.settings.system.screen_off_timeout=2147483647
+INFO         |   androidboot.qemu.virtiowifi=1
+INFO         |   androidboot.qemu.vsync=60
+INFO         |   androidboot.serialno=EMULATOR36X2X11X0
+INFO         |   androidboot.vbmeta.digest=43d61dbc053c8dbf3adaff951e5bdfcf174ece9dd24ffe8e6120f951cb412b2a
+INFO         |   androidboot.vbmeta.hash_alg=sha256
+INFO         |   androidboot.vbmeta.size=6784
+INFO         |   androidboot.veritymode=enforcing
+WHPX on Windows 10.0.26200 detected.
+Windows Hypervisor Platform accelerator is operational
+netsimd I 05-22 12:14:30.212 daemon\src\rust_main.rs:100 - netsim artifacts path: "C:\\Users\\prem\\AppData\\Local\\Temp\\netsimd"
+netsimd I 05-22 12:14:30.214 daemon\src\rust_main.rs:103 - NetsimdArgs {
+    fd_startup_str: None,
+    no_cli_ui: true,
+    no_web_ui: true,
+    pcap: false,
+    disable_address_reuse: false,
+    hci_port: None,
+    connector_instance: None,
+    instance: None,
+    logtostderr: false,
+    dev: false,
+    forward_host_mdns: false,
+    vsock: None,
+    config: None,
+    host_dns: Some(
+        "8.8.8.8,2401:4900:50:9::290,2401:4900:50:9::280",
+    ),
+    http_proxy: None,
+    wifi_tap: None,
+    wifi: None,
+    test_beacons: false,
+    no_test_beacons: false,
+    no_shutdown: false,
+    verbose: false,
+    version: false,
+    debug: DebugArgs {
+        debug_no_traffic: false,
+        debug_no_network: false,
+        debug_no_wmedium: false,
+        debug_no_mdns_wmedium: false,
+        debug_no_guest_to_host_mdns: false,
+    },
+    rssi: None,
+}
+INFO         | Monitoring duration of emulator setup.
+WARNING      | The emulator now requires a signed jwt token for gRPC access! Use the -grpc flag if you really want an open unprotected grpc port
+INFO         | Using security allow list from: C:\Users\prem\AppData\Local\Android\Sdk\emulator\lib\emulator_access.json
+WARNING      | *** Basic token auth should only be used by android-studio ***
+INFO         | The active JSON Web Key Sets can be found here: C:\Users\prem\AppData\Local\Temp\avd\running\13748\jwks\0b764ab3-a8b7-4958-891e-aa877b736ca1\active.jwk
+INFO         | Scanning C:\Users\prem\AppData\Local\Temp\avd\running\13748\jwks\0b764ab3-a8b7-4958-891e-aa877b736ca1 for jwk keys.
+INFO         | Started GRPC server at 127.0.0.1:8554, security: Local, auth: +token
+INFO         | Advertising in: C:\Users\prem\AppData\Local\Temp\avd\running\pid_13748.ini
+INFO         | Setting display: 0 configuration to: 1080x2400, dpi: 420x420 
+INFO         | setDisplayActiveConfig 0
+INFO         | Activated packet streamer for uwb emulation
+INFO         | Activated packet streamer for bluetooth emulation
+ERROR        | Unable to connect to adb daemon on port: 5037
+INFO         | Checking system compatibility:
+INFO         |   Checking: hasCompatibleHypervisor
+INFO         |      Ok: Hypervisor compatibility to run avd: `Pixel_8a` are met
+INFO         |   Checking: hasSufficientSystem
+INFO         |      Ok: System requirements to run avd: `Pixel_8a` are met
+INFO         |   Checking: hasSufficientHwGpu
+INFO         |      Ok: Hardware GPU requirements to run avd: `Pixel_8a` are passed
+INFO         |   Checking: hasSufficientDiskSpace
+INFO         |      Ok: Disk space requirements to run avd: `Pixel_8a` are met
+INFO         | Loading snapshot 'default_boot'...
+WARNING      | Error -1 from the snapshot callback
+
+WARNING      | Failed to load snapshot 'default_boot'
+ERROR        | Unable to connect to adb daemon on port: 5037
+WARNING      | adb command 'C:\Users\prem\AppData\Local\Android\Sdk\platform-tools\adb.exe -s emulator-5554 shell am start-foreground-service -e meter on com.android.emulator.radio.config/.MeterService ' failed: '* daemon not running; starting now at tcp:5037
+* daemon started successfully
+adb.exe: device offline'
+INFO         | Boot completed in 399741 ms
+INFO         | Increasing screen off timeout, logcat buffer size to 2M.
+INFO         | IPv4 server found: 8.8.8.8
+INFO         | Ignore IPv6 address: 8005:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 8005:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 8005:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 980b:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 980b:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 980b:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: b011:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: b011:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: b011:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 201a:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 201a:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 201a:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 882d:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 882d:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 882d:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: a833:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: a833:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: a833:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | IPv4 server found: 8.8.8.8
+INFO         | Ignore IPv6 address: 8005:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 8005:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 8005:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 980b:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 980b:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 980b:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: b011:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: b011:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: b011:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 201a:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 201a:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 201a:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 882d:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 882d:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 882d:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: a833:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: a833:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: a833:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | IPv4 server found: 8.8.8.8
+INFO         | Ignore IPv6 address: 8005:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 8005:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 8005:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 980b:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 980b:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 980b:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: b011:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: b011:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: b011:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 201a:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 201a:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 201a:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 882d:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 882d:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 882d:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: a833:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: a833:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: a833:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | IPv4 server found: 8.8.8.8
+INFO         | Ignore IPv6 address: 8005:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 8005:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 8005:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 980b:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 980b:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 980b:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: b011:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: b011:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: b011:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 201a:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 201a:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 201a:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 882d:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 882d:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 882d:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: a833:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: a833:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: a833:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | IPv4 server found: 8.8.8.8
+INFO         | Ignore IPv6 address: 8005:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 8005:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 8005:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 980b:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 980b:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 980b:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: b011:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: b011:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: b011:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 201a:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 201a:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 201a:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 882d:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 882d:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 882d:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: a833:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: a833:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: a833:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | IPv4 server found: 8.8.8.8
+INFO         | Ignore IPv6 address: 8005:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 8005:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 8005:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 980b:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 980b:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 980b:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: b011:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: b011:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: b011:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 201a:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 201a:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 201a:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 882d:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 882d:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: 882d:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: a833:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: a833:e2c4:e901:0:2000:e2c4:e901:0
+INFO         | Ignore IPv6 address: a833:e2c4:e901:0:2000:e2c4:e901:0
+glTexImage2D: got err pre :( 0x502 internal 0x1908 format 0x1908 type 0x1401
+glTexImage2D: got err :( 0x502 internal 0x1908 format 0x1908 type 0x1401
+glTexImage2D: got err pre :( 0x502 internal 0x1908 format 0x1908 type 0x1401
+glTexImage2D: got err :( 0x502 internal 0x1908 format 0x1908 type 0x1401
+C:/buildbot/src/googleplex-android/emu-36-2-release/hardware/google/gfxstream/host/gl/glestranslator/GLES_V2/GLESv2Imp.cpp:glPixelStorei:3277 error 0x501
+glTexImage2D: got err pre :( 0x502 internal 0x1908 format 0x1908 type 0x1401
+glTexImage2D: got err :( 0x502 internal 0x1908 format 0x1908 type 0x1401
+glTexImage2D: got err pre :( 0x502 internal 0x1908 format 0x1908 type 0x1401
+glTexImage2D: got err :( 0x502 internal 0x1908 format 0x1908 type 0x1401
+C:/buildbot/src/googleplex-android/emu-36-2-release/hardware/google/gfxstream/host/gl/glestranslator/GLES_V2/GLESv2Imp.cpp:glPixelStorei:3277 error 0x501
+glTexImage2D: got err pre :( 0x502 internal 0x1908 format 0x1908 type 0x1401
+glTexImage2D: got err :( 0x502 internal 0x1908 format 0x1908 type 0x1401
+glTexImage2D: got err pre :( 0x502 internal 0x1908 format 0x1908 type 0x1401
+glTexImage2D: got err :( 0x502 internal 0x1908 format 0x1908 type 0x1401
+C:/buildbot/src/googleplex-android/emu-36-2-release/hardware/google/gfxstream/host/gl/glestranslator/GLES_V2/GLESv2Imp.cpp:glPixelStorei:3277 error 0x501

@@ -1,0 +1,7 @@
+Successfully scheduled one-shot timer.
+Expected to fire at: 2026-05-22T17:52:03+05:30
+Prompt: Check if the second android build and install has succeeded
+
+[2026-05-22T17:51:43+05:30] Still waiting. Remaining time: 20s
+[2026-05-22T17:51:53+05:30] Still waiting. Remaining time: 10s
+[2026-05-22T17:52:03+05:30] Timer fired.
