@@ -23,12 +23,42 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMine }) => {
   const hasMedia = !!message.mediaUrl;
   const isImage = message.mediaType === 'image';
   const isVideo = message.mediaType === 'video';
+  const isGif = message.mediaType === 'gif';
+  const isSticker = message.mediaType === 'sticker';
+  const isVisualMedia = isGif || isSticker;
 
   const openUrl = () => {
     if (message.mediaUrl) {
       Linking.openURL(message.mediaUrl).catch(console.error);
     }
   };
+
+  // GIFs and stickers render without the colored bubble background
+  if (hasMedia && isVisualMedia) {
+    return (
+      <View style={[styles.container, isMine ? styles.mineContainer : styles.otherContainer]}>
+        <View style={styles.stickerWrapper}>
+          <TouchableOpacity onPress={openUrl} activeOpacity={0.85}>
+            <Image
+              source={{ uri: message.mediaUrl }}
+              style={isSticker ? styles.stickerImage : styles.gifImage}
+              resizeMode={isSticker ? 'contain' : 'cover'}
+            />
+          </TouchableOpacity>
+
+          {/* Footer overlaid at bottom-right */}
+          <View style={styles.stickerFooter}>
+            <Text style={styles.stickerTime}>{formatMessageTime(message.createdAt)}</Text>
+            {isMine && (
+              <View style={styles.status}>
+                <MessageStatus status={message.status} />
+              </View>
+            )}
+          </View>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, isMine ? styles.mineContainer : styles.otherContainer]}>
@@ -149,6 +179,30 @@ const styles = StyleSheet.create({
     flex: 1,
     fontWeight: '500',
   },
+  // ── GIF / Sticker (no bubble) ──
+  stickerWrapper: {
+    maxWidth: '65%',
+  },
+  gifImage: {
+    width: 200,
+    height: 160,
+    borderRadius: 12,
+  },
+  stickerImage: {
+    width: 150,
+    height: 150,
+  },
+  stickerFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginTop: 2,
+    gap: 2,
+  },
+  stickerTime: {
+    fontSize: 10,
+    color: colors.textSecondary,
+  },
   // ── Text ──
   text: {
     fontSize: typography.fontSize.regular,
@@ -161,7 +215,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    marginTop: spacing.xxs,
+    marginTop: 3,
+    gap: 2,
   },
   time: {
     fontSize: 10,
@@ -170,7 +225,7 @@ const styles = StyleSheet.create({
   otherTime: {
     color: colors.textSecondary,
   },
-  status: { marginLeft: spacing.xs },
+  status: { marginLeft: 1 },
   // ── Reply ──
   replyContainer: {
     backgroundColor: 'rgba(0,0,0,0.1)',
