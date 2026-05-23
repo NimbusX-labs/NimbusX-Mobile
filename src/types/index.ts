@@ -17,11 +17,11 @@ export interface Message {
   status: 'pending' | 'sent' | 'delivered' | 'read' | 'failed';
   mediaUrl?: string;
   mediaType?: 'image' | 'video' | 'audio' | 'file' | 'gif' | 'sticker';
-  mediaPublicId?: string; // Cloudinary public_id
+  mediaPath?: string;     // Supabase storage path (for deletion)
   mediaSize?: number;     // File size in bytes
-  mediaUploadedAt?: number;
-  storageMode?: 'local' | 'cloud';
   replyTo?: string;
+  isEdited?: boolean;
+  isPinned?: boolean;
 }
 
 export interface Chat {

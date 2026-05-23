@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { useAppSelector, useAppDispatch } from '@store/hooks';
-import { authService } from '@services/firebase/auth';
-import { firestoreService } from '@services/firebase/firestore';
+import { authService } from '@services/supabase/auth';
+import { firestoreService } from '@services/supabase/database';
 import { setUser } from '@store/slices/authSlice';
 
 // Navigators
@@ -48,7 +48,7 @@ const AppNavigator = () => {
       try {
         if (firebaseUser) {
           let displayName = firebaseUser.displayName || '';
-          let avatarUrl = firebaseUser.photoURL || '';
+          let avatarUrl = firebaseUser.avatarUrl || '';
 
           try {
             // Timeout the Firestore fetch at 5 seconds so we never hang here

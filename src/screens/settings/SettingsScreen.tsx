@@ -13,7 +13,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { ChatStackParamList } from '@navigation/types';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
 import { logout } from '@store/slices/authSlice';
-import { authService } from '@services/firebase/auth';
+import { authService } from '@services/supabase/auth';
 import { colors } from '@theme/colors';
 import { spacing } from '@theme/spacing';
 import { typography } from '@theme/typography';

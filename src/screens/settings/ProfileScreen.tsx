@@ -15,13 +15,12 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
 import { setUser } from '@store/slices/authSlice';
-import { firestoreService } from '@services/firebase/firestore';
-import { storageService } from '@services/firebase/storage';
+import { firestoreService } from '@services/supabase/database';
+import { storageService } from '@services/supabase/storage';
 import { colors } from '@theme/colors';
 import { spacing } from '@theme/spacing';
 import { typography } from '@theme/typography';
 import Avatar from '@components/common/Avatar';
-import { cacheService, StorageMode } from '@services/cacheService';
 
 const ProfileScreen = () => {
   const dispatch = useAppDispatch();
@@ -29,17 +28,6 @@ const ProfileScreen = () => {
   const [displayName, setDisplayName] = useState(user?.displayName || '');
   const [loading, setLoading] = useState(false);
   const [localAvatarUri, setLocalAvatarUri] = useState<string | null>(null);
-  const [storageMode, setStorageMode] = useState<StorageMode>('cloud');
-
-  React.useEffect(() => {
-    cacheService.getStorageMode().then(setStorageMode);
-  }, []);
-
-  const toggleStorageMode = async (value: boolean) => {
-    const newMode = value ? 'cloud' : 'local';
-    setStorageMode(newMode);
-    await cacheService.setStorageMode(newMode);
-  };
 
   const handlePickImage = async () => {
     try {
@@ -122,26 +110,6 @@ const ProfileScreen = () => {
               <Text style={styles.label}>Email</Text>
             </View>
             <Text style={styles.infoText}>{user?.email}</Text>
-          </View>
-
-          <View style={styles.switchSection}>
-            <View style={styles.switchRow}>
-              <Icon name="cloud-outline" size={24} color={colors.primaryAccent} />
-              <View style={styles.switchTextContainer}>
-                <Text style={styles.switchLabel}>Cloud Storage</Text>
-                <Text style={styles.switchHint}>
-                  {storageMode === 'cloud' 
-                    ? 'Media saved to Cloudinary and synced.' 
-                    : 'Media saved locally. Others may not see it.'}
-                </Text>
-              </View>
-              <Switch
-                value={storageMode === 'cloud'}
-                onValueChange={toggleStorageMode}
-                trackColor={{ false: colors.divider, true: colors.primaryAccent }}
-                thumbColor={colors.white}
-              />
-            </View>
           </View>
 
           <TouchableOpacity 
@@ -233,34 +201,6 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.7,
-  },
-  switchSection: {
-    width: '100%',
-    marginBottom: spacing.xl,
-    paddingVertical: spacing.s,
-    borderTopWidth: 1,
-    borderTopColor: colors.divider,
-    paddingTop: spacing.l,
-  },
-  switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  switchTextContainer: {
-    flex: 1,
-    marginLeft: spacing.m,
-    marginRight: spacing.m,
-  },
-  switchLabel: {
-    color: colors.textPrimary,
-    fontSize: typography.fontSize.regular,
-    fontWeight: '600',
-  },
-  switchHint: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    marginTop: 2,
   },
 });
 

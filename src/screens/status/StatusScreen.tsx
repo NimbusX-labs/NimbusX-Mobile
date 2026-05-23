@@ -22,8 +22,8 @@ import { colors } from '@theme/colors';
 import { spacing } from '@theme/spacing';
 import { typography } from '@theme/typography';
 import { useAppSelector } from '@store/hooks';
-import { firestoreService } from '@services/firebase/firestore';
-import { storageService } from '@services/firebase/storage';
+import { firestoreService } from '@services/supabase/database';
+import { storageService } from '@services/supabase/storage';
 import { Status } from '@types';
 
 const STATUS_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -152,7 +152,7 @@ const StatusScreen = () => {
           setSelectedImage(null);
           Alert.alert(
             'Photo skipped',
-            'Could not upload the photo (Firebase Storage may not be set up). Your text status will still be posted.',
+            'Could not upload the photo (Supabase Storage may not be set up). Your text status will still be posted.',
           );
         }
       }

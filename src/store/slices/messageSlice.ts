@@ -13,6 +13,13 @@ const messageSlice = createSlice({
   }),
   reducers: {
     upsertMessages: messageAdapter.upsertMany,
+    setMessages: (state, action: PayloadAction<Message[]>) => {
+      const pendingAndFailed = Object.values(state.entities).filter(
+        (m): m is Message => !!m && (m.status === 'pending' || m.status === 'failed')
+      );
+      messageAdapter.setAll(state, action.payload);
+      messageAdapter.upsertMany(state, pendingAndFailed);
+    },
     upsertMessage: messageAdapter.upsertOne,
     removeMessage: messageAdapter.removeOne,
     addToOfflineQueue: (state, action: PayloadAction<Message>) => {
@@ -35,6 +42,7 @@ const messageSlice = createSlice({
 
 export const {
   upsertMessages,
+  setMessages,
   upsertMessage,
   removeMessage,
   addToOfflineQueue,

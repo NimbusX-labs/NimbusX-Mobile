@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { useAppSelector } from '@store/hooks';
-import { presenceService } from '@services/firebase/presence';
+import { presenceService } from '@services/supabase/presence';
 
 export const useAppState = () => {
   const user = useAppSelector((state) => state.auth.user);

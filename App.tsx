@@ -1,3 +1,4 @@
+import 'react-native-url-polyfill/auto';
 import React, { useEffect, useState } from 'react';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
@@ -8,7 +9,6 @@ import ErrorBoundary from '@components/common/ErrorBoundary';
 
 // Silence noisy development-only warnings
 LogBox.ignoreLogs([
-  'This method is deprecated (as well as all React Native Firebase namespaced API)',
   'SafeAreaView has been deprecated and will be removed in a future release',
   'InteractionManager has been deprecated and will be removed in a future release',
 ]);

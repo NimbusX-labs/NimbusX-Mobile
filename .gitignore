@@ -73,3 +73,17 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Scratch files and symlinks
+artifact_link/
+scratch/
+query_db.js
+scratch_query.js
+check_columns.js
+check_buckets.js
+test_users.js
+window_dump.xml
+screen.png
+*.jsbundle
+*.log
+

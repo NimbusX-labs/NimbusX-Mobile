@@ -20,8 +20,8 @@ import { spacing } from '@theme/spacing';
 import { typography } from '@theme/typography';
 import Avatar from '@components/common/Avatar';
 import { useAppSelector } from '@store/hooks';
-import { firestoreService } from '@services/firebase/firestore';
-import { storageService } from '@services/firebase/storage';
+import { firestoreService } from '@services/supabase/database';
+import { storageService } from '@services/supabase/storage';
 import { User } from '@types';
 
 type GroupInfoRouteProp = RouteProp<ChatStackParamList, 'GroupInfo'>;
@@ -234,6 +234,9 @@ const GroupInfoScreen = () => {
           style: 'destructive',
           onPress: async () => {
             try {
+              // 1. Delete all media files in group storage first
+              await storageService.deleteChatMediaFolder(chatId);
+              // 2. Delete group from database
               await firestoreService.deleteGroup(chatId);
               navigation.popToTop();
             } catch (e) {

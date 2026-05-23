@@ -1,15 +1,15 @@
 export const COLLECTIONS = {
-  USERS: 'users',
+  PROFILES: 'profiles',
   CHATS: 'chats',
   MESSAGES: 'messages',
-  PRESENCE: 'presence',
+  CONTACTS: 'contacts',
   STATUSES: 'statuses',
 };
 
 export const STORAGE_PATHS = {
   AVATARS: 'avatars',
-  MEDIA: 'media',
-  STATUS: 'status',
+  CHAT_MEDIA: 'chat-media',
+  STATUS_MEDIA: 'status-media',
 };
 
 export const PAGINATION = {

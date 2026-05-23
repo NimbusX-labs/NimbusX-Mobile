@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
-import { firestoreService } from '@services/firebase/firestore';
+import { firestoreService } from '@services/supabase/database';
 import { upsertChats, removeChat, setChatsLoading } from '@store/slices/chatSlice';
 import { Chat } from '@types';
 

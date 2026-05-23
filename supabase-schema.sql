@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 );
 
 -- Enable RLS on Profiles
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SEuuCURITY;
 
 -- Profiles Policies
 CREATE POLICY "Allow public read access to profiles" 

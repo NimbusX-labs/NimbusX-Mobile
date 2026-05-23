@@ -27,7 +27,7 @@ const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { login, loading } = useAuth();
+  const { login, loginWithGoogle, loading } = useAuth();
   const navigation = useNavigation<LoginScreenNavigationProp>();
 
   const handleLogin = async () => {
@@ -40,6 +40,18 @@ const LoginScreen = () => {
       await login(email, password);
     } catch (error: any) {
       Alert.alert('Login Failed', error.message || 'Check your credentials and try again.');
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      await loginWithGoogle();
+    } catch (error: any) {
+      // Don't show alert if user cancelled
+      if (error?.message?.includes('SIGN_IN_CANCELLED') || error?.code === 'SIGN_IN_CANCELLED') {
+        return;
+      }
+      Alert.alert('Google Sign-In Failed', error.message || 'An error occurred during Google Sign-In.');
     }
   };
 
@@ -106,6 +118,27 @@ const LoginScreen = () => {
               <ActivityIndicator color={colors.white} />
             ) : (
               <Text style={styles.buttonText}>Login</Text>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity 
+            style={[styles.googleButton, loading && styles.buttonDisabled]} 
+            onPress={handleGoogleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#000000" />
+            ) : (
+              <>
+                <Icon name="logo-google" size={20} color="#000000" style={styles.googleIcon} />
+                <Text style={styles.googleButtonText}>Continue with Google</Text>
+              </>
             )}
           </TouchableOpacity>
 
@@ -196,6 +229,40 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: colors.white,
+    fontSize: typography.fontSize.medium,
+    fontWeight: 'bold',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: spacing.l,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.divider,
+  },
+  dividerText: {
+    color: colors.textSecondary,
+    paddingHorizontal: spacing.m,
+    fontSize: typography.fontSize.small,
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.white,
+    padding: spacing.m,
+    borderRadius: 25,
+    marginTop: spacing.s,
+    borderWidth: 1,
+    borderColor: colors.divider,
+  },
+  googleIcon: {
+    marginRight: spacing.s,
+  },
+  googleButtonText: {
+    color: colors.black,
     fontSize: typography.fontSize.medium,
     fontWeight: 'bold',
   },

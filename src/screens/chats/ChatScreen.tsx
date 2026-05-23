@@ -5,21 +5,29 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
-  Alert
+  Alert,
+  TouchableOpacity,
+  View,
+  Text,
+  AlertButton
 } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
-import { messagesSelectors, upsertMessage, addToOfflineQueue } from '@store/slices/messageSlice';
+import { messagesSelectors, upsertMessage, addToOfflineQueue, removeMessage } from '@store/slices/messageSlice';
 import { ChatStackParamList } from '@navigation/types';
 import { useMessages } from '@hooks/useMessages';
-import { firestoreService } from '@services/firebase/firestore';
-import { storageService } from '@services/firebase/storage';
+import { firestoreService } from '@services/supabase/database';
+import { storageService } from '@services/supabase/storage';
 import { colors, spacing } from '@theme';
+import { generateUUID } from '@utils/uuid';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { Message } from '@types';
 
 // Components
 import MessageBubble from '@components/chat/MessageBubble';
 import ChatInput from '@components/chat/ChatInput';
 import TypingIndicator from '@components/chat/TypingIndicator';
+import ImagePreviewModal from '@components/chat/ImagePreviewModal';
 
 type ChatRouteProp = RouteProp<ChatStackParamList, 'Chat'>;
 
@@ -30,15 +38,57 @@ const ChatScreen = () => {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
   
+  // Image preview state
+  const [previewImageUri, setPreviewImageUri] = React.useState<string | null>(null);
+  const [previewVisible, setPreviewVisible] = React.useState(false);
+
+  // Edit message state
+  const [editingMessage, setEditingMessage] = React.useState<Message | null>(null);
+
   // Typing reference
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Set header title
+  // Set header title and actions
+  const handleDeleteChat = React.useCallback(() => {
+    Alert.alert(
+      'Delete Chat',
+      'Are you sure you want to permanently delete this chat, all its messages, and all shared files?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // 1. Delete all media files from Supabase Storage
+              await storageService.deleteChatMediaFolder(chatId);
+              // 2. Delete chat from database (cascades to messages)
+              await firestoreService.deleteChat(chatId);
+              // 3. Go back to chat list
+              navigation.goBack();
+            } catch (err) {
+              console.error('Failed to delete chat:', err);
+              Alert.alert('Error', 'Could not delete chat. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  }, [chatId, navigation]);
+
   React.useLayoutEffect(() => {
     navigation.setOptions({
       headerTitle: otherUserName || 'Chat',
+      headerRight: () => (
+        <TouchableOpacity 
+          onPress={handleDeleteChat} 
+          style={{ marginRight: spacing.m, padding: spacing.xs }}
+        >
+          <Icon name="trash-outline" size={22} color="#ff4444" />
+        </TouchableOpacity>
+      ),
     });
-  }, [navigation, otherUserName]);
+  }, [navigation, otherUserName, handleDeleteChat]);
 
   // High-performance selector
   const messages = useAppSelector((state) => 
@@ -50,6 +100,10 @@ const ChatScreen = () => {
     (uid) => chat?.typing?.[uid] && uid !== user?.uid
   );
   const typingUsers = typingUserIds.length > 0 ? [otherUserName || 'Someone'] : [];
+
+  // Pinned messages
+  const pinnedMessages = messages.filter((m) => m.isPinned);
+  const latestPinnedMessage = pinnedMessages[0];
 
   const { loadMore } = useMessages(chatId);
 
@@ -84,8 +138,9 @@ const ChatScreen = () => {
   const handleSend = async (text: string) => {
     if (!user) return;
 
+    const messageId = generateUUID();
     const tempMsg: any = {
-      id: `temp_${Date.now()}`,
+      id: messageId,
       chatId,
       senderId: user.uid,
       text,
@@ -98,6 +153,7 @@ const ChatScreen = () => {
 
     try {
       await firestoreService.sendMessage({
+        id: messageId,
         chatId,
         senderId: user.uid,
         text,
@@ -142,18 +198,15 @@ const ChatScreen = () => {
     // Default mimeType if none provided
     const mimeType = attachment.mimeType || 'application/octet-stream';
     const fileName = attachment.fileName || `upload_${Date.now()}.bin`;
-    
-    // Get the user's actual storage mode for the UI (so it doesn't default to 'local' while uploading)
-    const currentStorageMode = await storageService.getStorageMode();
 
+    const messageId = generateUUID();
     const tempMsg: any = {
-      id: `temp_${Date.now()}`,
+      id: messageId,
       chatId,
       senderId: user.uid,
       text: '',
       mediaUrl: attachment.uri, // Use local URI for instant optimistic preview
       mediaType: attachment.type,
-      storageMode: currentStorageMode,
       createdAt: Date.now(),
       status: 'pending',
     };
@@ -165,15 +218,14 @@ const ChatScreen = () => {
       const uploadResult = await storageService.uploadMedia(chatId, attachment.uri, mimeType, fileName);
 
       await firestoreService.sendMessage({
+        id: messageId,
         chatId,
         senderId: user.uid,
         text: '',
         mediaUrl: uploadResult.url,
         mediaType: attachment.type,
-        mediaPublicId: uploadResult.publicId,
+        mediaPath: uploadResult.mediaPath,
         mediaSize: uploadResult.size,
-        mediaUploadedAt: uploadResult.uploadedAt,
-        storageMode: uploadResult.mode,
         createdAt: Date.now(),
         status: 'sent',
       });
@@ -182,8 +234,8 @@ const ChatScreen = () => {
       dispatch(upsertMessage({
         ...tempMsg,
         mediaUrl: uploadResult.url,
+        mediaPath: uploadResult.mediaPath,
         status: 'sent',
-        storageMode: uploadResult.mode,
       }));
     } catch (error) {
       console.error('Failed to send media:', error);
@@ -206,8 +258,9 @@ const ChatScreen = () => {
   const handleSendGif = async (gif: { url: string }) => {
     if (!user) return;
 
+    const messageId = generateUUID();
     const tempMsg: any = {
-      id: `temp_${Date.now()}`,
+      id: messageId,
       chatId,
       senderId: user.uid,
       text: '',
@@ -221,6 +274,7 @@ const ChatScreen = () => {
 
     try {
       await firestoreService.sendMessage({
+        id: messageId,
         chatId,
         senderId: user.uid,
         text: '',
@@ -240,8 +294,9 @@ const ChatScreen = () => {
   const handleSendSticker = async (sticker: { url: string }) => {
     if (!user) return;
 
+    const messageId = generateUUID();
     const tempMsg: any = {
-      id: `temp_${Date.now()}`,
+      id: messageId,
       chatId,
       senderId: user.uid,
       text: '',
@@ -255,6 +310,7 @@ const ChatScreen = () => {
 
     try {
       await firestoreService.sendMessage({
+        id: messageId,
         chatId,
         senderId: user.uid,
         text: '',
@@ -270,6 +326,126 @@ const ChatScreen = () => {
     }
   };
 
+  // ── Edit Message Handlers ─────────────────────────────────────
+  const handleStartEdit = React.useCallback((message: Message) => {
+    setEditingMessage(message);
+  }, []);
+
+  const handleCancelEdit = React.useCallback(() => {
+    setEditingMessage(null);
+  }, []);
+
+  const handleSaveEdit = React.useCallback(async (text: string) => {
+    if (!editingMessage) return;
+    try {
+      await firestoreService.editMessage(chatId, editingMessage.id, text);
+      dispatch(upsertMessage({
+        ...editingMessage,
+        text,
+        isEdited: true
+      }));
+      setEditingMessage(null);
+    } catch (err) {
+      console.error('Failed to edit message:', err);
+      Alert.alert('Error', 'Could not edit message. Please try again.');
+    }
+  }, [editingMessage, chatId, dispatch]);
+
+  // ── Pin Message Handlers ──────────────────────────────────────
+  const handleTogglePin = React.useCallback(async (message: Message) => {
+    const nextPinState = !message.isPinned;
+    try {
+      await firestoreService.setPinMessage(chatId, message.id, nextPinState);
+      dispatch(upsertMessage({
+        ...message,
+        isPinned: nextPinState
+      }));
+    } catch (err) {
+      console.error('Failed to pin/unpin message:', err);
+      Alert.alert('Error', 'Could not update pin status.');
+    }
+  }, [chatId, dispatch]);
+
+  // ── Delete Message Handlers ───────────────────────────────────
+  const handleDeleteMessage = React.useCallback((message: Message) => {
+    const options: AlertButton[] = [
+      { text: 'Cancel', style: 'cancel' as const }
+    ];
+
+    if (message.senderId === user?.uid) {
+      options.push({
+        text: 'Delete for Everyone',
+        style: 'destructive' as const,
+        onPress: async () => {
+          try {
+            if (message.mediaPath) {
+              await storageService.deleteMedia(message.mediaPath);
+            }
+            await firestoreService.deleteMessage(chatId, message.id);
+            dispatch(removeMessage(message.id));
+          } catch (err) {
+            console.error('Failed to delete message for everyone:', err);
+            Alert.alert('Error', 'Could not delete message.');
+          }
+        }
+      });
+    }
+
+    options.push({
+      text: 'Delete for Me',
+      style: 'destructive' as const,
+      onPress: () => {
+        dispatch(removeMessage(message.id));
+      }
+    });
+
+    Alert.alert(
+      'Delete Message',
+      'Are you sure you want to delete this message?',
+      options
+    );
+  }, [chatId, user, dispatch]);
+
+  // ── Long Press Handler ────────────────────────────────────────
+  const handleMessageLongPress = React.useCallback((message: Message) => {
+    const options: AlertButton[] = [];
+
+    if (message.senderId === user?.uid && !message.mediaUrl) {
+      options.push({
+        text: 'Edit Message',
+        onPress: () => handleStartEdit(message)
+      });
+    }
+
+    options.push({
+      text: message.isPinned ? 'Unpin Message' : 'Pin Message',
+      onPress: () => handleTogglePin(message)
+    });
+
+    options.push({
+      text: 'Delete Message',
+      style: 'destructive' as const,
+      onPress: () => handleDeleteMessage(message)
+    });
+
+    options.push({
+      text: 'Cancel',
+      style: 'cancel' as const
+    });
+
+    Alert.alert(
+      'Message Options',
+      undefined,
+      options
+    );
+  }, [user, handleStartEdit, handleTogglePin, handleDeleteMessage]);
+
+  // ── Image Press Handler (Previewer) ──────────────────────────
+  const handlePressImage = React.useCallback((uri: string) => {
+    setPreviewImageUri(uri);
+    setPreviewVisible(true);
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView 
@@ -277,12 +453,29 @@ const ChatScreen = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
+        {/* Pinned message banner */}
+        {latestPinnedMessage && (
+          <View style={styles.pinnedBanner}>
+            <View style={styles.pinnedContent}>
+              <Icon name="pin" size={16} color={colors.primaryAccent} />
+              <Text style={styles.pinnedText} numberOfLines={1}>
+                Pinned: {latestPinnedMessage.text || (latestPinnedMessage.mediaType ? `[${latestPinnedMessage.mediaType}]` : 'Attachment')}
+              </Text>
+            </View>
+            <TouchableOpacity onPress={() => handleTogglePin(latestPinnedMessage)} style={styles.unpinButton}>
+              <Icon name="close" size={16} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+        )}
+
         <FlatList
           data={messages}
           renderItem={({ item }) => (
             <MessageBubble 
               message={item} 
               isMine={item.senderId === user?.uid} 
+              onLongPress={handleMessageLongPress}
+              onPressImage={handlePressImage}
             />
           )}
           keyExtractor={(item) => item.id}
@@ -300,8 +493,18 @@ const ChatScreen = () => {
           onSendMedia={handleSendMedia}
           onSendGif={handleSendGif}
           onSendSticker={handleSendSticker}
+          editingMessage={editingMessage}
+          onCancelEdit={handleCancelEdit}
+          onSaveEdit={handleSaveEdit}
         />
       </KeyboardAvoidingView>
+
+      {/* Fullscreen Image Previewer */}
+      <ImagePreviewModal
+        visible={previewVisible}
+        imageUri={previewImageUri}
+        onClose={() => setPreviewVisible(false)}
+      />
     </SafeAreaView>
   );
 };
@@ -316,6 +519,31 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingVertical: spacing.l,
+  },
+  // ── Pinned Banner Styles ──
+  pinnedBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.secondaryBackground,
+    paddingHorizontal: spacing.l,
+    paddingVertical: spacing.s,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  pinnedContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  pinnedText: {
+    color: colors.textPrimary,
+    fontSize: 14,
+    marginLeft: spacing.s,
+    flex: 1,
+  },
+  unpinButton: {
+    padding: spacing.xs,
   },
 });
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAppDispatch } from '@store/hooks';
-import { firestoreService } from '@services/firebase/firestore';
-import { upsertMessages, setMessagesLoading } from '@store/slices/messageSlice';
+import { firestoreService } from '@services/supabase/database';
+import { setMessages, setMessagesLoading } from '@store/slices/messageSlice';
 import { PAGINATION } from '@constants';
 
 export const useMessages = (chatId: string) => {
@@ -13,7 +13,7 @@ export const useMessages = (chatId: string) => {
 
     dispatch(setMessagesLoading({ chatId, loading: true }));
     const unsubscribe = firestoreService.listenMessages(chatId, limit, (messages) => {
-      dispatch(upsertMessages(messages));
+      dispatch(setMessages(messages));
       dispatch(setMessagesLoading({ chatId, loading: false }));
     });
 

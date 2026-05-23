@@ -11,6 +11,8 @@ import MessageStatus from './MessageStatus';
 interface MessageBubbleProps {
   message: Message;
   isMine: boolean;
+  onLongPress?: (message: Message) => void;
+  onPressImage?: (uri: string) => void;
 }
 
 const MEDIA_ICON: Record<string, string> = {
@@ -19,7 +21,33 @@ const MEDIA_ICON: Record<string, string> = {
   file: 'document-text',
 };
 
-const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMine }) => {
+const getFileName = (message: Message) => {
+  if (message.mediaPath) {
+    const parts = message.mediaPath.split('/');
+    return parts[parts.length - 1];
+  }
+  if (message.mediaUrl) {
+    try {
+      const decodedUrl = decodeURIComponent(message.mediaUrl);
+      const urlParts = decodedUrl.split('?')[0].split('/');
+      return urlParts[urlParts.length - 1];
+    } catch {
+      // ignore
+    }
+  }
+  return message.mediaType === 'audio' ? 'Audio file' : 'File';
+};
+
+const formatFileSize = (bytes?: number) => {
+  if (!bytes) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${kb.toFixed(1)} KB`;
+  const mb = kb / 1024;
+  return `${mb.toFixed(1)} MB`;
+};
+
+const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMine, onLongPress, onPressImage }) => {
   const hasMedia = !!message.mediaUrl;
   const isImage = message.mediaType === 'image';
   const isVideo = message.mediaType === 'video';
@@ -33,12 +61,33 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMine }) => {
     }
   };
 
+  const handlePressImage = () => {
+    if (isImage && message.mediaUrl && onPressImage) {
+      onPressImage(message.mediaUrl);
+    } else {
+      openUrl();
+    }
+  };
+
+  const handlePressVisual = () => {
+    if (message.mediaUrl && onPressImage) {
+      onPressImage(message.mediaUrl);
+    } else {
+      openUrl();
+    }
+  };
+
   // GIFs and stickers render without the colored bubble background
   if (hasMedia && isVisualMedia) {
     return (
       <View style={[styles.container, isMine ? styles.mineContainer : styles.otherContainer]}>
-        <View style={styles.stickerWrapper}>
-          <TouchableOpacity onPress={openUrl} activeOpacity={0.85}>
+        <TouchableOpacity 
+          activeOpacity={0.95}
+          onLongPress={() => onLongPress?.(message)}
+          disabled={!onLongPress}
+          style={styles.stickerWrapper}
+        >
+          <TouchableOpacity onPress={handlePressVisual} activeOpacity={0.85}>
             <Image
               source={{ uri: message.mediaUrl }}
               style={isSticker ? styles.stickerImage : styles.gifImage}
@@ -48,6 +97,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMine }) => {
 
           {/* Footer overlaid at bottom-right */}
           <View style={styles.stickerFooter}>
+            {message.isPinned && (
+              <Icon name="pin" size={10} color={colors.textSecondary} style={{ marginRight: 2 }} />
+            )}
+            {message.isEdited && (
+              <Text style={[styles.stickerTime, { fontStyle: 'italic', marginRight: 2 }]}>
+                edited
+              </Text>
+            )}
             <Text style={styles.stickerTime}>{formatMessageTime(message.createdAt)}</Text>
             {isMine && (
               <View style={styles.status}>
@@ -55,14 +112,19 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMine }) => {
               </View>
             )}
           </View>
-        </View>
+        </TouchableOpacity>
       </View>
     );
   }
 
   return (
     <View style={[styles.container, isMine ? styles.mineContainer : styles.otherContainer]}>
-      <View style={[styles.bubble, isMine ? styles.mineBubble : styles.otherBubble]}>
+      <TouchableOpacity 
+        activeOpacity={0.95}
+        onLongPress={() => onLongPress?.(message)}
+        disabled={!onLongPress}
+        style={[styles.bubble, isMine ? styles.mineBubble : styles.otherBubble]}
+      >
 
         {/* Reply preview */}
         {message.replyTo && (
@@ -73,7 +135,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMine }) => {
 
         {/* Image */}
         {hasMedia && isImage && (
-          <TouchableOpacity onPress={openUrl} activeOpacity={0.85}>
+          <TouchableOpacity onPress={handlePressImage} activeOpacity={0.85}>
             <Image
               source={{ uri: message.mediaUrl }}
               style={styles.mediaImage}
@@ -100,7 +162,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMine }) => {
               color="#fff"
             />
             <Text style={styles.mediaPillText} numberOfLines={1}>
-              {message.mediaType === 'audio' ? 'Audio file' : 'File'}
+              {getFileName(message)} {message.mediaSize ? `(${formatFileSize(message.mediaSize)})` : ''}
             </Text>
             <Icon name="open-outline" size={14} color="rgba(255,255,255,0.7)" />
           </TouchableOpacity>
@@ -115,13 +177,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMine }) => {
 
         {/* Timestamp + status */}
         <View style={styles.footer}>
-          {message.storageMode === 'local' && (
-            <Icon 
-              name="cloud-offline-outline" 
-              size={12} 
-              color={isMine ? 'rgba(255,255,255,0.7)' : colors.textSecondary} 
-              style={{ marginRight: 4 }}
-            />
+          {message.isPinned && (
+            <Icon name="pin" size={10} color={isMine ? 'rgba(255,255,255,0.7)' : colors.textSecondary} style={{ marginRight: 2 }} />
+          )}
+          {message.isEdited && (
+            <Text style={[styles.time, !isMine && styles.otherTime, { fontStyle: 'italic', marginRight: 2 }]}>
+              edited
+            </Text>
           )}
           <Text style={[styles.time, !isMine && styles.otherTime]}>
             {formatMessageTime(message.createdAt)}
@@ -132,7 +194,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMine }) => {
             </View>
           )}
         </View>
-      </View>
+      </TouchableOpacity>
     </View>
   );
 };

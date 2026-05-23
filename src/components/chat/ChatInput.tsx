@@ -19,10 +19,12 @@ import {
   launchCamera,
   MediaType,
 } from 'react-native-image-picker';
+import DocumentPicker from 'react-native-document-picker';
 import { colors } from '@theme/colors';
 import { spacing } from '@theme/spacing';
 import EmojiGifPicker from './EmojiGifPicker';
 import { TenorMedia } from '@services/tenorService';
+import { Message } from '@types';
 
 interface AttachmentResult {
   uri: string;
@@ -37,6 +39,9 @@ interface ChatInputProps {
   onSendMedia?: (attachment: AttachmentResult) => Promise<void>;
   onSendGif?: (gif: TenorMedia) => void;
   onSendSticker?: (sticker: TenorMedia) => void;
+  editingMessage?: Message | null;
+  onCancelEdit?: () => void;
+  onSaveEdit?: (text: string) => void;
 }
 
 type AttachOption = {
@@ -50,13 +55,34 @@ type AttachOption = {
 // The default picker tab when opened via the sticker shortcut icon
 type PickerStartTab = 'emoji' | 'sticker';
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSend, onTyping, onSendMedia, onSendGif, onSendSticker }) => {
+const ChatInput: React.FC<ChatInputProps> = ({
+  onSend,
+  onTyping,
+  onSendMedia,
+  onSendGif,
+  onSendSticker,
+  editingMessage = null,
+  onCancelEdit,
+  onSaveEdit,
+}) => {
   const [text, setText] = useState('');
   const [menuVisible, setMenuVisible] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerStartTab, setPickerStartTab] = useState<PickerStartTab>('emoji');
   const inputRef = useRef<TextInput>(null);
+
+  // ── Populate input when editingMessage changes ──────────────────────────────
+  useEffect(() => {
+    if (editingMessage) {
+      setText(editingMessage.text);
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    } else {
+      setText('');
+    }
+  }, [editingMessage]);
 
   const menuAnim = useRef(new Animated.Value(0)).current;
 
@@ -135,7 +161,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, onTyping, onSendMedia, on
   };
 
   // ── Media upload ────────────────────────────────────────────────────────────
-  const handleMedia = async (result: AttachmentResult) => {
+  const handleMedia = useCallback(async (result: AttachmentResult) => {
     if (!onSendMedia) {
       Alert.alert('Not supported', 'Media sending is not wired up in this chat.');
       return;
@@ -144,11 +170,12 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, onTyping, onSendMedia, on
       setUploading(true);
       await onSendMedia(result);
     } catch (err) {
+      console.error('Media upload error:', err);
       Alert.alert('Upload failed', 'Could not send the file. Please try again.');
     } finally {
       setUploading(false);
     }
-  };
+  }, [onSendMedia]);
 
   // ── Quick camera (no menu) ──────────────────────────────────────────────────
   const quickCamera = useCallback(async () => {
@@ -165,7 +192,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, onTyping, onSendMedia, on
       fileName: asset.fileName,
       mimeType: asset.type,
     });
-  }, [onSendMedia]);
+  }, [handleMedia]);
 
   // ── Attachment options ──────────────────────────────────────────────────────
   const attachOptions: AttachOption[] = [
@@ -211,7 +238,25 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, onTyping, onSendMedia, on
       bgColor: '#3B82F6',
       action: () => {
         closeMenu();
-        Alert.alert('Documents', 'Document picking requires react-native-document-picker. Coming soon!');
+        setTimeout(async () => {
+          try {
+            const res = await DocumentPicker.pick({
+              type: [DocumentPicker.types.allFiles],
+            });
+            const asset = res[0];
+            handleMedia({
+              uri: asset.uri,
+              type: 'file',
+              fileName: asset.name || undefined,
+              mimeType: asset.type || undefined,
+            });
+          } catch (err) {
+            if (!DocumentPicker.isCancel(err)) {
+              console.error('Document picker error:', err);
+              Alert.alert('Error', 'Failed to pick document.');
+            }
+          }
+        }, 300);
       },
     },
     {
@@ -222,15 +267,23 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, onTyping, onSendMedia, on
       action: async () => {
         closeMenu();
         setTimeout(async () => {
-          const res = await launchImageLibrary({ mediaType: 'mixed' as MediaType });
-          if (res.didCancel || !res.assets?.length) return;
-          const asset = res.assets[0];
-          handleMedia({
-            uri: asset.uri!,
-            type: 'audio',
-            fileName: asset.fileName,
-            mimeType: asset.type,
-          });
+          try {
+            const res = await DocumentPicker.pick({
+              type: [DocumentPicker.types.audio],
+            });
+            const asset = res[0];
+            handleMedia({
+              uri: asset.uri,
+              type: 'audio',
+              fileName: asset.name || undefined,
+              mimeType: asset.type || undefined,
+            });
+          } catch (err) {
+            if (!DocumentPicker.isCancel(err)) {
+              console.error('Audio picker error:', err);
+              Alert.alert('Error', 'Failed to pick audio file.');
+            }
+          }
         }, 300);
       },
     },
@@ -239,7 +292,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, onTyping, onSendMedia, on
   // ── Text send ───────────────────────────────────────────────────────────────
   const handleSend = () => {
     if (text.trim()) {
-      onSend(text.trim());
+      if (editingMessage && onSaveEdit) {
+        onSaveEdit(text.trim());
+      } else {
+        onSend(text.trim());
+      }
       setText('');
       onTyping(false);
     }
@@ -292,6 +349,23 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, onTyping, onSendMedia, on
           │ 😊  Message              📎   🏷   📷   │  │ 🎤  │
           └──────────────────────────────────────────┘  └─────┘
           ═══════════════════════════════════════════════════════════════════ */}
+      {editingMessage && (
+        <View style={styles.editBanner}>
+          <View style={styles.editInfo}>
+            <Icon name="pencil" size={16} color={colors.primaryAccent} />
+            <View style={styles.editTextContainer}>
+              <Text style={styles.editLabel}>Editing message</Text>
+              <Text style={styles.editText} numberOfLines={1}>
+                {editingMessage.text}
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity onPress={onCancelEdit} style={styles.editCloseButton}>
+            <Icon name="close-circle" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+        </View>
+      )}
+
       <View style={styles.inputBar}>
         <View style={styles.inputWrapper}>
 
@@ -363,7 +437,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, onTyping, onSendMedia, on
           activeOpacity={hasText ? 0.7 : 1}
         >
           <Icon
-            name={hasText ? 'send' : 'mic'}
+            name={editingMessage ? 'checkmark' : (hasText ? 'send' : 'mic')}
             size={22}
             color={colors.white}
           />
@@ -464,6 +538,40 @@ const styles = StyleSheet.create({
     color: '#E7E9EA',
     fontSize: 15,
     fontWeight: '500',
+  },
+  // ── Edit message banner ──
+  editBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#1E2D3D',
+    paddingHorizontal: spacing.l,
+    paddingVertical: spacing.s,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.primaryAccent,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(255,255,255,0.05)',
+  },
+  editInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  editTextContainer: {
+    marginLeft: spacing.s,
+    flex: 1,
+  },
+  editLabel: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: colors.primaryAccent,
+  },
+  editText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  editCloseButton: {
+    padding: spacing.xs,
   },
 });
 

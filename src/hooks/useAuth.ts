@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
-import { authService } from '@services/firebase/auth';
-import { firestoreService } from '@services/firebase/firestore';
+import { authService } from '@services/supabase/auth';
+import { firestoreService } from '@services/supabase/database';
 import { setUser, setLoading, setError, logout } from '@store/slices/authSlice';
 
 export const useAuth = () => {
@@ -23,15 +23,25 @@ export const useAuth = () => {
     }
   }, [dispatch]);
 
+  const loginWithGoogle = useCallback(async () => {
+    dispatch(setLoading(true));
+    try {
+      const googleUser = await authService.signInWithGoogle();
+      return googleUser;
+    } catch (err: any) {
+      dispatch(setError(err.message));
+      throw err;
+    } finally {
+      dispatch(setLoading(false));
+    }
+  }, [dispatch]);
+
   const register = useCallback(async (email: string, password: string, displayName: string) => {
     dispatch(setLoading(true));
     try {
       const firebaseUser = await authService.registerWithEmail(email, password);
       if (firebaseUser) {
-        // Try to update profile with displayName
-        await firebaseUser.updateProfile({ displayName });
-        
-        // Explicitly save the user profile to Firestore immediately to fix the race condition
+        // Explicitly save the user profile to database immediately to fix the race condition
         await firestoreService.saveUser({
           uid: firebaseUser.uid,
           email: email,
@@ -75,6 +85,7 @@ export const useAuth = () => {
     error,
     login,
     register,
+    loginWithGoogle,
     signOut,
   };
 };

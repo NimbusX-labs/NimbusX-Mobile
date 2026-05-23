@@ -17,7 +17,7 @@ import { ChatStackParamList } from '@navigation/types';
 import { colors } from '@theme/colors';
 import { spacing } from '@theme/spacing';
 import { typography } from '@theme/typography';
-import { firestoreService } from '@services/firebase/firestore';
+import { firestoreService } from '@services/supabase/database';
 import { useAppSelector } from '@store/hooks';
 import Avatar from '@components/common/Avatar';
 import { User } from '@types';

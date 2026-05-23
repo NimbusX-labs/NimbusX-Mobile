@@ -18,7 +18,7 @@ import { colors } from '@theme/colors';
 import { spacing } from '@theme/spacing';
 import { typography } from '@theme/typography';
 import Avatar from '@components/common/Avatar';
-import { firestoreService } from '@services/firebase/firestore';
+import { firestoreService } from '@services/supabase/database';
 import { useAppSelector } from '@store/hooks';
 import { chatSelectors } from '@store/slices/chatSlice';
 import { User, Chat } from '@types';
