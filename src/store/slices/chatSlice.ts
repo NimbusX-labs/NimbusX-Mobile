@@ -22,10 +22,13 @@ const chatSlice = createSlice({
     setChatsError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
+    clearAllChats: (state) => {
+      chatAdapter.removeAll(state);
+    },
   },
 });
 
-export const { upsertChats, upsertChat, removeChat, setChatsLoading, setChatsError } = chatSlice.actions;
+export const { upsertChats, upsertChat, removeChat, setChatsLoading, setChatsError, clearAllChats } = chatSlice.actions;
 
 export const chatSelectors = chatAdapter.getSelectors<RootState>(
   (state) => state.chats
