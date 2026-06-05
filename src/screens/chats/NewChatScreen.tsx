@@ -14,14 +14,14 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { ChatStackParamList } from '@navigation/types';
-import { colors } from '@theme/colors';
+import { useThemeColors, createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
 import { typography } from '@theme/typography';
 import Avatar from '@components/common/Avatar';
 import { firestoreService } from '@services/supabase/database';
 import { useAppSelector } from '@store/hooks';
 import { chatSelectors } from '@store/slices/chatSlice';
-import { User, Chat } from '@types';
+import { User } from '@types';
 
 type NavigationProp = StackNavigationProp<ChatStackParamList, 'NewChat'>;
 
@@ -31,6 +31,7 @@ const isValidEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim());
 type SearchState = 'idle' | 'searching' | 'found' | 'already_contact' | 'not_found' | 'error';
 
 const NewChatScreen = () => {
+  const colors = useThemeColors();
   const [query, setQuery] = useState('');
   const [contacts, setContacts] = useState<User[]>([]);
   const [searchResult, setSearchResult] = useState<User | null>(null);
@@ -281,7 +282,7 @@ const NewChatScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: colors.primaryBackground,
@@ -437,6 +438,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.s,
     lineHeight: 20,
   },
-});
+}));
 
 export default NewChatScreen;
