@@ -12,8 +12,14 @@ export const useAuth = () => {
     dispatch(setLoading(true));
     try {
       const firebaseUser = await authService.signInWithEmail(email, password);
-      // Let onAuthStateChanged handle the actual Redux user setting
-      // but we return it here just in case components need immediate response
+      if (firebaseUser) {
+        await firestoreService.saveUser({
+          uid: firebaseUser.uid,
+          email: email.trim().toLowerCase(),
+          displayName: firebaseUser.displayName || '',
+          avatarUrl: firebaseUser.avatarUrl || '',
+        });
+      }
       return firebaseUser;
     } catch (err: any) {
       dispatch(setError(err.message));
@@ -39,7 +45,7 @@ export const useAuth = () => {
   const register = useCallback(async (email: string, password: string, displayName: string) => {
     dispatch(setLoading(true));
     try {
-      const firebaseUser = await authService.registerWithEmail(email, password);
+      const firebaseUser = await authService.registerWithEmail(email, password, displayName);
       if (firebaseUser) {
         // Explicitly save the user profile to database immediately to fix the race condition
         await firestoreService.saveUser({
@@ -79,6 +85,18 @@ export const useAuth = () => {
     }
   }, [dispatch]);
 
+  const resetPassword = useCallback(async (email: string) => {
+    dispatch(setLoading(true));
+    try {
+      await authService.resetPassword(email);
+    } catch (err: any) {
+      dispatch(setError(err.message));
+      throw err;
+    } finally {
+      dispatch(setLoading(false));
+    }
+  }, [dispatch]);
+
   return {
     user,
     loading,
@@ -87,5 +105,7 @@ export const useAuth = () => {
     register,
     loginWithGoogle,
     signOut,
+    resetPassword,
   };
 };
+
