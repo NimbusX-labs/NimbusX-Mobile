@@ -10,12 +10,12 @@ export interface MediaUploadResult {
   resourceType?: string;
   size?: number;
   uploadedAt: number;
-  mode: 'cloud';
+  mode: 'cloud' | 'local';
 }
 
 const resolveUriToLocalPath = async (uri: string, mimeType: string): Promise<{ localPath: string; isTemp: boolean }> => {
   if (uri.startsWith('content://')) {
-    const ext = mimeType.split('/')[1] || 'tmp';
+    const ext = mimeType.split('/')[1]?.replace(/[^a-z0-9.]+/gi, '_') || 'tmp';
     const tempFileName = `temp_${Date.now()}.${ext}`;
     const tempPath = `${RNFS.CachesDirectoryPath}/${tempFileName}`;
     await RNFS.copyFile(uri, tempPath);
@@ -27,6 +27,33 @@ const resolveUriToLocalPath = async (uri: string, mimeType: string): Promise<{ l
     cleanPath = decodeURIComponent(cleanPath.replace('file://', ''));
   }
   return { localPath: cleanPath, isTemp: false };
+};
+
+const sanitizeFileName = (fileName: string) => {
+  const trimmed = fileName.trim() || `upload_${Date.now()}.bin`;
+  return trimmed.replace(/[\\/:*?"<>|\x00-\x1F]/g, '_');
+};
+
+const toFileUri = (localPath: string) => {
+  return localPath.startsWith('file://') ? localPath : `file://${localPath}`;
+};
+
+const getFileSize = async (fileUri: string, mimeType: string) => {
+  let size = 0;
+  const { localPath, isTemp } = await resolveUriToLocalPath(fileUri, mimeType);
+  try {
+    const stats = await RNFS.stat(localPath);
+    size = stats.size;
+  } finally {
+    if (isTemp) {
+      try {
+        await RNFS.unlink(localPath);
+      } catch {
+        // ignore temp cleanup failures
+      }
+    }
+  }
+  return size;
 };
 
 const uploadToBucket = async (bucket: string, path: string, fileUri: string, mimeType: string) => {
@@ -87,7 +114,8 @@ export const storageService = {
    * Upload chat media to Supabase storage
    */
   uploadMedia: async (chatId: string, fileUri: string, mimeType: string, fileName: string): Promise<MediaUploadResult> => {
-    const path = `${chatId}/${fileName}`;
+    const safeFileName = sanitizeFileName(fileName);
+    const path = `${chatId}/${safeFileName}`;
     await uploadToBucket('chat-media', path, fileUri, mimeType);
 
     // Get signed URL for private bucket (valid for 1 year)
@@ -100,24 +128,12 @@ export const storageService = {
     }
 
     // Also cache it locally to save bandwidth, using the folder structured by chatId
-    await cacheService.cacheFile(fileUri, chatId, fileName);
+    await cacheService.cacheFile(fileUri, chatId, safeFileName);
 
     // Read file stats to get file size if possible
     let size = 0;
     try {
-      const { localPath, isTemp } = await resolveUriToLocalPath(fileUri, mimeType);
-      try {
-        const stats = await RNFS.stat(localPath);
-        size = stats.size;
-      } finally {
-        if (isTemp) {
-          try {
-            await RNFS.unlink(localPath);
-          } catch {
-            // ignore
-          }
-        }
-      }
+      size = await getFileSize(fileUri, mimeType);
     } catch (err) {
       console.warn('Failed to read file size stats:', err);
     }
@@ -130,6 +146,41 @@ export const storageService = {
       uploadedAt: Date.now(),
       mode: 'cloud'
     };
+  },
+
+  /**
+   * Cache chat media locally without uploading it to Supabase storage.
+   */
+  saveMediaLocally: async (chatId: string, fileUri: string, mimeType: string, fileName: string): Promise<MediaUploadResult> => {
+    const safeFileName = sanitizeFileName(fileName);
+    const { localPath, isTemp } = await resolveUriToLocalPath(fileUri, mimeType);
+
+    try {
+      const localUrl = await cacheService.cacheFile(toFileUri(localPath), chatId, safeFileName);
+      let size = 0;
+
+      try {
+        const stats = await RNFS.stat(localPath);
+        size = stats.size;
+      } catch (err) {
+        console.warn('Failed to read local media size stats:', err);
+      }
+
+      return {
+        url: localUrl,
+        size,
+        uploadedAt: Date.now(),
+        mode: 'local'
+      };
+    } finally {
+      if (isTemp) {
+        try {
+          await RNFS.unlink(localPath);
+        } catch {
+          // ignore temp cleanup failures
+        }
+      }
+    }
   },
 
   /**
