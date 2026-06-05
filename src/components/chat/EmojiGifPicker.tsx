@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { colors } from '@theme/colors';
+import { useThemeColors, createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
 import { EMOJI_CATEGORIES } from '@data/emojis';
 import {
@@ -44,30 +44,36 @@ const BottomTab = React.memo(({
   icon, active, onPress,
 }: {
   icon: string; active: boolean; onPress: () => void;
-}) => (
-  <TouchableOpacity
-    style={[styles.bottomTab, active && styles.bottomTabActive]}
-    onPress={onPress}
-    activeOpacity={0.7}
-  >
-    <Icon name={icon} size={22} color={active ? colors.primaryAccent : colors.textSecondary} />
-  </TouchableOpacity>
-));
+}) => {
+  const colors = useThemeColors();
+  return (
+    <TouchableOpacity
+      style={[styles.bottomTab, active && styles.bottomTabActive]}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <Icon name={icon} size={22} color={active ? colors.primaryAccent : colors.textSecondary} />
+    </TouchableOpacity>
+  );
+});
 
 // ── Emoji Category Tab ───────────────────────────────────────────────────────
 const CategoryTab = React.memo(({
   icon, active, onPress,
 }: {
   icon: string; active: boolean; onPress: () => void;
-}) => (
-  <TouchableOpacity
-    style={[styles.catTab, active && styles.catTabActive]}
-    onPress={onPress}
-    hitSlop={{ top: 4, bottom: 4 }}
-  >
-    <Icon name={icon} size={18} color={active ? colors.primaryAccent : colors.textSecondary} />
-  </TouchableOpacity>
-));
+}) => {
+  const colors = useThemeColors();
+  return (
+    <TouchableOpacity
+      style={[styles.catTab, active && styles.catTabActive]}
+      onPress={onPress}
+      hitSlop={{ top: 4, bottom: 4 }}
+    >
+      <Icon name={icon} size={18} color={active ? colors.primaryAccent : colors.textSecondary} />
+    </TouchableOpacity>
+  );
+});
 
 // ═══════════════════════════════════════════════════════════════════════════════
 const EmojiGifPicker: React.FC<EmojiGifPickerProps> = ({
@@ -77,6 +83,7 @@ const EmojiGifPicker: React.FC<EmojiGifPickerProps> = ({
   onGifSelect,
   onStickerSelect,
 }) => {
+  const colors = useThemeColors();
   const [tab, setTab] = useState<PickerTab>(startTab);
 
   // Sync tab when startTab changes (e.g., sticker shortcut icon tapped)
@@ -99,7 +106,7 @@ const EmojiGifPicker: React.FC<EmojiGifPickerProps> = ({
     if (tab === 'sticker' && stickers.length === 0 && !searchQuery) {
       loadTrendingStickers();
     }
-  }, [tab, visible]);
+  }, [gifs.length, searchQuery, stickers.length, tab, visible]);
 
   const loadTrendingGifs = async () => {
     setLoading(true);
@@ -313,7 +320,7 @@ const EmojiGifPicker: React.FC<EmojiGifPickerProps> = ({
 };
 
 // ═════════════════════════════════════════════════════════════════════════════
-const styles = StyleSheet.create({
+const styles = createThemedStyles((colors) => ({
   container: {
     height: 300,
     backgroundColor: '#1A2836',
@@ -421,6 +428,6 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '600',
   },
-});
+}));
 
 export default React.memo(EmojiGifPicker);

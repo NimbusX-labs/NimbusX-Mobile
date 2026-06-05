@@ -20,7 +20,7 @@ import {
   MediaType,
 } from 'react-native-image-picker';
 import DocumentPicker from 'react-native-document-picker';
-import { colors } from '@theme/colors';
+import { useThemeColors, createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
 import EmojiGifPicker from './EmojiGifPicker';
 import { TenorMedia } from '@services/tenorService';
@@ -65,6 +65,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   onCancelEdit,
   onSaveEdit,
 }) => {
+  const colors = useThemeColors();
   const [text, setText] = useState('');
   const [menuVisible, setMenuVisible] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -111,17 +112,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
     }
   }, [pickerOpen]);
 
-  // ── Open sticker picker directly (sticker icon in the field) ────────────────
-  const openStickerPicker = useCallback(() => {
-    if (pickerOpen && pickerStartTab === 'sticker') {
-      setPickerOpen(false);
-      inputRef.current?.focus();
-    } else {
-      Keyboard.dismiss();
-      setPickerStartTab('sticker');
-      setTimeout(() => setPickerOpen(true), 80);
-    }
-  }, [pickerOpen, pickerStartTab]);
 
   // ── When input is focused, close picker ─────────────────────────────────────
   const handleInputFocus = useCallback(() => {
@@ -170,8 +160,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
       setUploading(true);
       await onSendMedia(result);
     } catch (err) {
-      console.error('Media upload error:', err);
-      Alert.alert('Upload failed', 'Could not send the file. Please try again.');
+      console.error('Media send error:', err);
+      Alert.alert('Send failed', 'Could not send the file. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -232,7 +222,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
       },
     },
     {
-      label: 'Document',
+      label: 'File',
       icon: 'document-text',
       iconColor: '#fff',
       bgColor: '#3B82F6',
@@ -242,10 +232,11 @@ const ChatInput: React.FC<ChatInputProps> = ({
           try {
             const res = await DocumentPicker.pick({
               type: [DocumentPicker.types.allFiles],
+              copyTo: 'cachesDirectory',
             });
             const asset = res[0];
             handleMedia({
-              uri: asset.uri,
+              uri: asset.fileCopyUri || asset.uri,
               type: 'file',
               fileName: asset.name || undefined,
               mimeType: asset.type || undefined,
@@ -253,7 +244,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           } catch (err) {
             if (!DocumentPicker.isCancel(err)) {
               console.error('Document picker error:', err);
-              Alert.alert('Error', 'Failed to pick document.');
+              Alert.alert('Error', 'Failed to pick file.');
             }
           }
         }, 300);
@@ -270,10 +261,11 @@ const ChatInput: React.FC<ChatInputProps> = ({
           try {
             const res = await DocumentPicker.pick({
               type: [DocumentPicker.types.audio],
+              copyTo: 'cachesDirectory',
             });
             const asset = res[0];
             handleMedia({
-              uri: asset.uri,
+              uri: asset.fileCopyUri || asset.uri,
               type: 'audio',
               fileName: asset.name || undefined,
               mimeType: asset.type || undefined,
@@ -289,7 +281,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     },
   ];
 
-  // ── Text send ───────────────────────────────────────────────────────────────
+  // ── Attachment options ──────────────────────────────────────────────────────
   const handleSend = () => {
     if (text.trim()) {
       if (editingMessage && onSaveEdit) {
@@ -344,10 +336,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
       )}
 
       {/* ══════════════════════════════════════════════════════════════════════
-          INPUT BAR — WhatsApp style:
-          ┌──────────────────────────────────────────┐  ┌─────┐
-          │ 😊  Message              📎   🏷   📷   │  │ 🎤  │
-          └──────────────────────────────────────────┘  └─────┘
+          INPUT BAR — Modern Design with external Plus button:
+          ＋ ┌───────────────────────────┐  ┌───┐
+             │ 😊  Message            📄  │  │ 🎤│
+             └───────────────────────────┘  └───┘
           ═══════════════════════════════════════════════════════════════════ */}
       {editingMessage && (
         <View style={styles.editBanner}>
@@ -367,8 +359,16 @@ const ChatInput: React.FC<ChatInputProps> = ({
       )}
 
       <View style={styles.inputBar}>
-        <View style={styles.inputWrapper}>
+        {/* Plus Button outside on the left */}
+        <TouchableOpacity
+          onPress={openMenu}
+          style={styles.plusButton}
+          activeOpacity={0.7}
+        >
+          <Icon name="add" size={26} color={colors.textSecondary} />
+        </TouchableOpacity>
 
+        <View style={styles.inputWrapper}>
           {/* 😊 Emoji toggle — left edge */}
           <TouchableOpacity
             onPress={toggleEmojiPicker}
@@ -394,52 +394,19 @@ const ChatInput: React.FC<ChatInputProps> = ({
             multiline
           />
 
-          {/* 📎 Attach — right cluster */}
-          <TouchableOpacity
-            onPress={openMenu}
-            style={styles.fieldIcon}
-            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-          >
-            {uploading ? (
-              <ActivityIndicator size="small" color={colors.primaryAccent} />
-            ) : (
-              <Icon name="attach" size={22} color={colors.textSecondary} style={{ transform: [{ rotate: '-45deg' }] }} />
-            )}
-          </TouchableOpacity>
-
-          {/* 🏷️ Sticker shortcut */}
-          <TouchableOpacity
-            onPress={openStickerPicker}
-            style={styles.fieldIcon}
-            hitSlop={{ top: 8, bottom: 8, left: 2, right: 2 }}
-          >
-            <Icon
-              name={pickerOpen && pickerStartTab === 'sticker' ? 'keypad-outline' : 'pricetag-outline'}
-              size={20}
-              color={pickerOpen && pickerStartTab === 'sticker' ? colors.primaryAccent : colors.textSecondary}
-            />
-          </TouchableOpacity>
-
-          {/* 📷 Camera shortcut */}
-          <TouchableOpacity
-            onPress={quickCamera}
-            style={[styles.fieldIcon, { marginRight: 2 }]}
-            hitSlop={{ top: 8, bottom: 8, left: 2, right: 8 }}
-          >
-            <Icon name="camera-outline" size={21} color={colors.textSecondary} />
-          </TouchableOpacity>
+          {/* Document icon removed */}
         </View>
 
-        {/* 🎤 / ➤  Send or Mic — circular outside */}
+        {/* 🎤 / ➤ Send or Mic — circular outside */}
         <TouchableOpacity
-          style={styles.actionButton}
+          style={[styles.actionButton, !hasText && styles.actionButtonMic]}
           onPress={hasText ? handleSend : undefined}
           activeOpacity={hasText ? 0.7 : 1}
         >
           <Icon
             name={editingMessage ? 'checkmark' : (hasText ? 'send' : 'mic')}
-            size={22}
-            color={colors.white}
+            size={hasText ? 20 : 22}
+            color={hasText ? '#080E1A' : colors.white}
           />
         </TouchableOpacity>
       </View>
@@ -457,25 +424,36 @@ const ChatInput: React.FC<ChatInputProps> = ({
 };
 
 // ═════════════════════════════════════════════════════════════════════════════
-const styles = StyleSheet.create({
+const styles = createThemedStyles((colors) => ({
   inputBar: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    paddingHorizontal: 4,
-    paddingVertical: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
     backgroundColor: colors.primaryBackground,
-    gap: 5,
+    gap: 8,
+  },
+  plusButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#1E293B',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Platform.OS === 'ios' ? 1 : 2,
   },
   inputWrapper: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'flex-end',
-    backgroundColor: colors.secondaryBackground,
+    backgroundColor: '#111827', // Match dark slate
     borderRadius: 24,
     paddingLeft: 4,
-    paddingRight: 2,
+    paddingRight: 4,
     paddingVertical: Platform.OS === 'ios' ? 4 : 0,
-    minHeight: 46,
+    minHeight: 44,
+    borderWidth: 1,
+    borderColor: '#1F2937',
   },
   fieldIcon: {
     width: 36,
@@ -490,16 +468,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingTop: Platform.OS === 'ios' ? 9 : 8,
     paddingBottom: Platform.OS === 'ios' ? 9 : 8,
-    paddingHorizontal: 2,
+    paddingHorizontal: 4,
     maxHeight: 100,
   },
   actionButton: {
-    backgroundColor: colors.primaryAccent,
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    backgroundColor: '#00E5FF', // Sleek Cyan
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: Platform.OS === 'ios' ? 1 : 2,
+  },
+  actionButtonMic: {
+    backgroundColor: '#1E293B', // Slate Dark
   },
   // ── Overlay ──
   overlay: {
@@ -511,7 +493,7 @@ const styles = StyleSheet.create({
   // ── Attach menu ──
   attachMenu: {
     marginHorizontal: spacing.l,
-    backgroundColor: '#1E2D3D',
+    backgroundColor: colors.cardBackground,
     borderRadius: 18,
     paddingVertical: spacing.s,
     shadowColor: '#000',
@@ -535,7 +517,7 @@ const styles = StyleSheet.create({
     marginRight: spacing.m,
   },
   attachLabel: {
-    color: '#E7E9EA',
+    color: colors.textPrimary,
     fontSize: 15,
     fontWeight: '500',
   },
@@ -544,13 +526,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#1E2D3D',
+    backgroundColor: colors.cardBackground,
     paddingHorizontal: spacing.l,
     paddingVertical: spacing.s,
     borderLeftWidth: 4,
     borderLeftColor: colors.primaryAccent,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255,255,255,0.05)',
+    borderTopColor: colors.divider,
   },
   editInfo: {
     flexDirection: 'row',
@@ -573,6 +555,6 @@ const styles = StyleSheet.create({
   editCloseButton: {
     padding: spacing.xs,
   },
-});
+}));
 
 export default ChatInput;
