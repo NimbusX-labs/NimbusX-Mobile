@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
-import { colors } from '@theme/colors';
+import { useThemeColors, createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
 
 interface TypingIndicatorProps {
@@ -8,6 +8,7 @@ interface TypingIndicatorProps {
 }
 
 const TypingIndicator: React.FC<TypingIndicatorProps> = ({ typingUsers }) => {
+  const colors = useThemeColors();
   const opacity = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
@@ -42,7 +43,7 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({ typingUsers }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles((colors) => ({
   container: {
     paddingHorizontal: spacing.l,
     paddingVertical: spacing.xs,
@@ -53,6 +54,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontStyle: 'italic',
   },
-});
+}));
 
 export default TypingIndicator;

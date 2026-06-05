@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { colors } from '@theme/colors';
+import { useThemeColors, createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
 
 interface ReplyPreviewProps {
@@ -11,6 +11,7 @@ interface ReplyPreviewProps {
 }
 
 const ReplyPreview: React.FC<ReplyPreviewProps> = ({ name, text, onCancel }) => {
+  const colors = useThemeColors();
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -27,7 +28,7 @@ const ReplyPreview: React.FC<ReplyPreviewProps> = ({ name, text, onCancel }) => 
   );
 };
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles((colors) => ({
   container: {
     flexDirection: 'row',
     backgroundColor: 'rgba(0,0,0,0.2)',
@@ -62,6 +63,6 @@ const styles = StyleSheet.create({
   close: {
     padding: spacing.s,
   },
-});
+}));
 
 export default React.memo(ReplyPreview);

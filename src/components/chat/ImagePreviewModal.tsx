@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, View, Image, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { colors } from '@theme/colors';
+import { useThemeColors, createThemedStyles } from '@theme/colors';
 
 interface ImagePreviewModalProps {
   visible: boolean;
@@ -10,6 +10,7 @@ interface ImagePreviewModalProps {
 }
 
 const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({ visible, imageUri, onClose }) => {
+  const colors = useThemeColors();
   if (!imageUri) return null;
 
   return (
@@ -30,7 +31,7 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({ visible, imageUri
   );
 };
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.95)',
@@ -59,6 +60,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-});
+}));
 
 export default ImagePreviewModal;
