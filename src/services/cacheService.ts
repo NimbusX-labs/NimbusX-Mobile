@@ -1,9 +1,8 @@
-import { Platform } from 'react-native';
 // Use require to prevent crash on startup if native module isn't linked yet
 let RNFS: any = null;
 try {
   RNFS = require('react-native-fs');
-} catch (e) {
+} catch {
   console.warn('react-native-fs native module not linked yet');
 }
 
