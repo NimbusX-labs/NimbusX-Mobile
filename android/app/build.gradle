@@ -51,6 +51,7 @@ react {
     // hermesFlags = ["-O", "-output-source-map"]
 
     /* Autolinking */
+    enableSoCleanup = false
     autolinkLibrariesWithApp()
 }
 
@@ -110,12 +111,9 @@ android {
     dependencies {
         // The version of react-native is set by the React Native Gradle Plugin
         implementation("com.facebook.react:react-android")
-
-        if (hermesEnabled.toBoolean()) {
-            implementation("com.facebook.react:hermes-android")
-        } else {
-            implementation jscFlavor
-        }
+        // RN 0.84's default host starts Hermes. Keep its runtime packaged even
+        // when hermesEnabled=false is used to avoid Windows hermesc builds.
+        implementation("com.facebook.react:hermes-android")
     }
 
 
