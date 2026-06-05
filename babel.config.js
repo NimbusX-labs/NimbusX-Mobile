@@ -4,6 +4,7 @@ module.exports = {
     [
       'module-resolver',
       {
+        cwd: 'packagejson',
         root: ['./src'],
         alias: {
           '@assets': './src/assets',

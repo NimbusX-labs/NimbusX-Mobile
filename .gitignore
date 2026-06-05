@@ -55,6 +55,9 @@ yarn-error.log
 
 # Bundle artifact
 *.jsbundle
+.bundle/assets/
+.bundle/dotslash-cache/
+.bundle/*.bundle
 
 # Ruby / CocoaPods
 **/Pods/
@@ -86,4 +89,3 @@ window_dump.xml
 screen.png
 *.jsbundle
 *.log
-
