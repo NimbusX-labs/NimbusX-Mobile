@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors } from '@theme/colors';
+import { useThemeColors, createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
 
 interface BadgeProps {
@@ -9,6 +9,7 @@ interface BadgeProps {
 }
 
 const Badge: React.FC<BadgeProps> = ({ count, size = 20 }) => {
+  const colors = useThemeColors();
   if (count <= 0) return null;
 
   const displayCount = count > 99 ? '99+' : count.toString();
@@ -20,7 +21,7 @@ const Badge: React.FC<BadgeProps> = ({ count, size = 20 }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles((colors) => ({
   container: {
     backgroundColor: colors.primaryAccent,
     justifyContent: 'center',
@@ -31,6 +32,6 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontWeight: 'bold',
   },
-});
+}));
 
 export default React.memo(Badge);

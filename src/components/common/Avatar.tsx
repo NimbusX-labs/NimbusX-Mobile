@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Image, Text, StyleSheet } from 'react-native';
-import { colors } from '@theme/colors';
+import { useThemeColors, createThemedStyles } from '@theme/colors';
 
 interface AvatarProps {
   uri?: string;
@@ -17,6 +17,7 @@ const Avatar: React.FC<AvatarProps> = ({
   isOnline = false,
   showStatus = false 
 }) => {
+  const colors = useThemeColors();
   const initials = name
     .split(' ')
     .map((n) => n[0])
@@ -52,7 +53,7 @@ const Avatar: React.FC<AvatarProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles((colors) => ({
   container: {
     justifyContent: 'center',
     alignItems: 'center',
@@ -81,6 +82,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.primaryBackground,
   },
-});
+}));
 
 export default React.memo(Avatar);
