@@ -1,9 +1,7 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState, useLayoutEffect } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Animated,
-  FlatList,
   Image,
   KeyboardAvoidingView,
   Modal,
@@ -17,95 +15,49 @@ import {
   View,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
 import { launchImageLibrary } from 'react-native-image-picker';
-import { colors } from '@theme/colors';
+import { useThemeColors, createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
-import { typography } from '@theme/typography';
 import { useAppSelector } from '@store/hooks';
 import { firestoreService } from '@services/supabase/database';
 import { storageService } from '@services/supabase/storage';
 import { Status } from '@types';
+import Avatar from '@components/common/Avatar';
 
-const STATUS_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const STATUS_TTL_MS = 24 * 60 * 60 * 1000;
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+// High-quality mock data matching the screenshot design
+const MOCK_ELENA_AVATAR = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80';
+const MOCK_MARCUS_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80';
+const MOCK_SARAH_AVATAR = 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80';
+const MOCK_DAVID_AVATAR = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80';
 
-function timeAgo(ts: number): string {
-  const diff = Date.now() - ts;
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return 'just now';
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
-}
-
-// ─── StatusRing — coloured arc indicating live statuses ─────────────────────
-
-const StatusRing = ({ count }: { count: number }) => {
-  const spinAnim = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    if (count > 0) {
-      Animated.loop(
-        Animated.timing(spinAnim, { toValue: 1, duration: 3000, useNativeDriver: true }),
-      ).start();
-    }
-  }, [count, spinAnim]);
-
-  return (
-    <View
-      style={[
-        styles.ring,
-        {
-          borderColor: count > 0 ? colors.primaryAccent : colors.divider,
-          borderWidth: count > 0 ? 2.5 : 1.5,
-        },
-      ]}
-    >
-      {count > 0 && (
-        <View style={styles.ringBadge}>
-          <Text style={styles.ringBadgeText}>{count > 9 ? '9+' : count}</Text>
-        </View>
-      )}
-    </View>
-  );
-};
-
-// ─── StatusCard ─────────────────────────────────────────────────────────────
-
-const StatusCard = React.memo(({ item }: { item: Status }) => (
-  <View style={styles.card}>
-    {item.imageUrl ? (
-      <Image source={{ uri: item.imageUrl }} style={styles.cardImage} resizeMode="cover" />
-    ) : (
-      <View style={styles.cardTextOnly}>
-        <Icon name="chatbubble-ellipses-outline" size={18} color={colors.primaryAccent} />
-      </View>
-    )}
-    <View style={styles.cardBody}>
-      {item.text ? (
-        <Text style={styles.cardText} numberOfLines={2}>
-          {item.text}
-        </Text>
-      ) : null}
-      <Text style={styles.cardTime}>{timeAgo(item.createdAt)}</Text>
-    </View>
-  </View>
-));
-
-// ─── Main Screen ─────────────────────────────────────────────────────────────
+const MOCK_ELENA_POST = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80';
+const MOCK_MARCUS_POST = 'https://images.unsplash.com/photo-1547082299-de196ea013d6?auto=format&fit=crop&w=300&q=80';
+const MOCK_SYSTEM_POST = 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=300&q=80';
 
 const StatusScreen = () => {
+  const colors = useThemeColors();
   const user = useAppSelector(state => state.auth.user);
   const uid = user?.uid ?? '';
   const displayName = user?.displayName ?? 'Me';
   const avatarUrl = user?.avatarUrl;
+  const navigation = useNavigation<any>();
 
   const [allStatuses, setAllStatuses] = useState<Status[]>([]);
   const [composerOpen, setComposerOpen] = useState(false);
   const [text, setText] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
+  const [replyText, setReplyText] = useState('');
+
+  // Hide default react navigation header
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+  }, [navigation]);
 
   // Subscribe to live Firestore statuses
   useEffect(() => {
@@ -114,9 +66,6 @@ const StatusScreen = () => {
   }, []);
 
   const myStatuses = allStatuses.filter(s => s.uid === uid);
-  const otherStatuses = allStatuses.filter(s => s.uid !== uid);
-
-  // ── Composer helpers ──────────────────────────────────────────────────────
 
   const openComposer = useCallback(() => setComposerOpen(true), []);
   const closeComposer = useCallback(() => {
@@ -142,22 +91,19 @@ const StatusScreen = () => {
     try {
       let imageUrl: string | undefined;
 
-      // Try to upload the image — if Storage isn't set up yet, skip it and post text-only
       if (selectedImage) {
         try {
           imageUrl = await storageService.uploadStatusImage(uid, selectedImage);
         } catch (storageErr: any) {
           console.warn('Image upload failed, posting text-only:', storageErr?.message);
-          // Remove the selected image so we don't mislead the user
           setSelectedImage(null);
           Alert.alert(
             'Photo skipped',
-            'Could not upload the photo (Supabase Storage may not be set up). Your text status will still be posted.',
+            'Could not upload the photo. Your text status will still be posted.',
           );
         }
       }
 
-      // Only post if we have text or a successfully uploaded image
       if (!text.trim() && !imageUrl) {
         setPosting(false);
         return;
@@ -182,96 +128,212 @@ const StatusScreen = () => {
     }
   }, [text, selectedImage, uid, displayName, avatarUrl, closeComposer]);
 
-  const canPost = !posting && (!!text.trim() || !!selectedImage);
+  const handleSendReply = (name: string) => {
+    if (!replyText.trim()) return;
+    Alert.alert('Reply Sent', `Your reply to ${name} has been sent.`);
+    setReplyText('');
+  };
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  const canPost = !posting && (!!text.trim() || !!selectedImage);
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* ── My status row ── */}
+      {/* ── Custom NimbusX Logo Header ── */}
+      <View style={styles.customHeader}>
+        <TouchableOpacity activeOpacity={0.7} style={styles.headerLeftBtn}>
+          <Icon name="cloud" size={24} color="#00E5FF" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>NimbusX</Text>
+        <TouchableOpacity 
+          activeOpacity={0.7} 
+          onPress={() => navigation.navigate('Profile')}
+          style={styles.headerRightBtn}
+        >
+          <View style={styles.profileIconOutline}>
+            <Avatar uri={avatarUrl} name={displayName} size={28} />
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        {/* ── Recent Updates (Horizontal Row) ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>MY STATUS</Text>
-          <TouchableOpacity style={styles.myRow} onPress={openComposer} activeOpacity={0.7}>
-            <View style={styles.avatarWrap}>
-              {avatarUrl ? (
-                <Image source={{ uri: avatarUrl }} style={styles.avatarImg} />
-              ) : (
-                <View style={[styles.avatarImg, styles.avatarPlaceholder]}>
-                  <Text style={styles.avatarInitial}>{displayName[0]?.toUpperCase() ?? '?'}</Text>
+          <Text style={styles.sectionTitle}>Recent Updates</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.updatesScroll}
+          >
+            {/* Add Status Button */}
+            <TouchableOpacity style={styles.avatarColumn} onPress={openComposer} activeOpacity={0.75}>
+              <View style={styles.avatarBorderWrapper}>
+                <View style={styles.addStatusCircle}>
+                  <Icon name="add" size={20} color="#00E5FF" />
                 </View>
-              )}
-              <StatusRing count={myStatuses.length} />
-              <View style={styles.addBadge}>
-                <Icon name="add" size={12} color={colors.white} />
               </View>
-            </View>
-            <View style={styles.myText}>
-              <Text style={styles.myTitle}>
-                {myStatuses.length > 0 ? 'Add to my status' : 'Tap to add status'}
-              </Text>
-              <Text style={styles.mySubTitle}>
-                {myStatuses.length > 0
-                  ? `${myStatuses.length} update${myStatuses.length > 1 ? 's' : ''} · visible 24h`
-                  : 'Photo or text update'}
-              </Text>
-            </View>
-            <Icon name="chevron-forward" size={20} color={colors.divider} />
-          </TouchableOpacity>
+              <Text style={styles.avatarLabel} numberOfLines={1}>Add Status</Text>
+            </TouchableOpacity>
+
+            {/* My Status (if posted) */}
+            {myStatuses.length > 0 && (
+              <TouchableOpacity style={styles.avatarColumn} activeOpacity={0.75}>
+                <View style={[styles.avatarBorderWrapper, styles.avatarBorderWrapperActive]}>
+                  <Avatar uri={avatarUrl} name={displayName} size={50} />
+                </View>
+                <Text style={styles.avatarLabel} numberOfLines={1}>My Status</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Elena */}
+            <TouchableOpacity style={styles.avatarColumn} activeOpacity={0.75}>
+              <View style={[styles.avatarBorderWrapper, styles.avatarBorderWrapperActive]}>
+                <Avatar uri={MOCK_ELENA_AVATAR} name="Elena" size={50} />
+              </View>
+              <Text style={styles.avatarLabel} numberOfLines={1}>Elena</Text>
+            </TouchableOpacity>
+
+            {/* Marcus */}
+            <TouchableOpacity style={styles.avatarColumn} activeOpacity={0.75}>
+              <View style={[styles.avatarBorderWrapper, styles.avatarBorderWrapperActive]}>
+                <Avatar uri={MOCK_MARCUS_AVATAR} name="Marcus" size={50} />
+              </View>
+              <Text style={styles.avatarLabel} numberOfLines={1}>Marcus</Text>
+            </TouchableOpacity>
+
+            {/* Sarah */}
+            <TouchableOpacity style={styles.avatarColumn} activeOpacity={0.75}>
+              <View style={styles.avatarBorderWrapper}>
+                <Avatar uri={MOCK_SARAH_AVATAR} name="Sarah" size={50} />
+              </View>
+              <Text style={styles.avatarLabel} numberOfLines={1}>Sarah</Text>
+            </TouchableOpacity>
+
+            {/* David */}
+            <TouchableOpacity style={styles.avatarColumn} activeOpacity={0.75}>
+              <View style={styles.avatarBorderWrapper}>
+                <Avatar uri={MOCK_DAVID_AVATAR} name="David" size={50} />
+              </View>
+              <Text style={styles.avatarLabel} numberOfLines={1}>David</Text>
+            </TouchableOpacity>
+          </ScrollView>
         </View>
 
-        {/* ── My updates list ── */}
-        {myStatuses.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>MY UPDATES</Text>
-            {myStatuses.map(item => (
-              <StatusCard key={item.id} item={item} />
-            ))}
-          </View>
-        )}
+        {/* ── Discover Feed ── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Discover</Text>
 
-        {/* ── Recent updates from others ── */}
-        {otherStatuses.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>RECENT UPDATES</Text>
-            {otherStatuses.map(item => (
-              <TouchableOpacity key={item.id} style={styles.contactRow} activeOpacity={0.7}>
-                <View style={styles.avatarWrap}>
-                  {item.avatarUrl ? (
-                    <Image source={{ uri: item.avatarUrl }} style={styles.avatarImg} />
-                  ) : (
-                    <View style={[styles.avatarImg, styles.avatarPlaceholder]}>
-                      <Text style={styles.avatarInitial}>
-                        {item.displayName[0]?.toUpperCase() ?? '?'}
-                      </Text>
-                    </View>
-                  )}
-                  <StatusRing count={1} />
-                </View>
-                <View style={styles.myText}>
-                  <Text style={styles.myTitle}>{item.displayName}</Text>
-                  <Text style={styles.mySubTitle}>{timeAgo(item.createdAt)}</Text>
-                </View>
+          {/* Elena's Large Premium Update Card */}
+          <View style={styles.discoverCardLarge}>
+            <Image source={{ uri: MOCK_ELENA_POST }} style={styles.largeCardBg} resizeMode="cover" />
+            
+            {/* Elena Profile Overlay */}
+            <View style={styles.largeCardHeader}>
+              <Avatar uri={MOCK_ELENA_AVATAR} name="Elena" size={24} />
+              <Text style={styles.largeCardUser}>Elena</Text>
+            </View>
+
+            {/* Reply Input Overlay */}
+            <View style={styles.replyOverlay}>
+              <TextInput
+                style={styles.replyInput}
+                placeholder="Reply to update..."
+                placeholderTextColor="rgba(255,255,255,0.6)"
+                value={replyText}
+                onChangeText={setReplyText}
+              />
+              <TouchableOpacity 
+                style={styles.replySendBtn} 
+                onPress={() => handleSendReply('Elena')}
+                activeOpacity={0.7}
+              >
+                <Icon name="send" size={14} color="#080E1A" />
               </TouchableOpacity>
-            ))}
+            </View>
           </View>
-        )}
 
-        {/* ── Empty state ── */}
-        {allStatuses.length === 0 && (
-          <View style={styles.emptyWrap}>
-            <Icon name="sparkles-outline" size={52} color={colors.divider} />
-            <Text style={styles.emptyTitle}>No status updates yet</Text>
-            <Text style={styles.emptyText}>
-              Tap the + button to share a photo or text update that disappears in 24 hours.
-            </Text>
+          {/* Real user updates from database (rendered dynamically if they exist) */}
+          {allStatuses.filter(s => s.uid !== 'elena' && s.uid !== 'marcus').map(status => (
+            <View key={status.id} style={styles.discoverCardLarge}>
+              {status.imageUrl ? (
+                <Image source={{ uri: status.imageUrl }} style={styles.largeCardBg} resizeMode="cover" />
+              ) : (
+                <View style={[styles.largeCardBg, styles.largeCardBgTextOnly]}>
+                  <Text style={status.text && status.text.length > 80 ? styles.statusTextSmall : styles.statusTextLarge}>
+                    {status.text}
+                  </Text>
+                </View>
+              )}
+              
+              <View style={styles.largeCardHeader}>
+                <Avatar uri={status.avatarUrl} name={status.displayName} size={24} />
+                <Text style={styles.largeCardUser}>{status.displayName}</Text>
+              </View>
+
+              {status.imageUrl && status.text && (
+                <View style={status.text.length > 60 ? styles.realStatusDescSmall : styles.realStatusDesc}>
+                  <Text style={styles.realStatusDescText} numberOfLines={2}>
+                    {status.text}
+                  </Text>
+                </View>
+              )}
+
+              <View style={styles.replyOverlay}>
+                <TextInput
+                  style={styles.replyInput}
+                  placeholder="Reply to update..."
+                  placeholderTextColor="rgba(255,255,255,0.6)"
+                />
+                <TouchableOpacity style={styles.replySendBtn} activeOpacity={0.7}>
+                  <Icon name="send" size={14} color="#080E1A" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))}
+
+          {/* 2-Column Grid of Updates */}
+          <View style={styles.discoverGrid}>
+            {/* Left Card: Marcus */}
+            <View style={styles.gridCard}>
+              <Image source={{ uri: MOCK_MARCUS_POST }} style={styles.gridCardBg} resizeMode="cover" />
+              
+              {/* Cyan active dot indicator */}
+              <View style={styles.activeIndicatorDot} />
+
+              <View style={styles.gridCardFooter}>
+                <Avatar uri={MOCK_MARCUS_AVATAR} name="Marcus" size={18} />
+                <Text style={styles.gridCardUser} numberOfLines={1}>Marcus</Text>
+              </View>
+            </View>
+
+            {/* Right Card: System */}
+            <View style={styles.gridCard}>
+              <Image source={{ uri: MOCK_SYSTEM_POST }} style={styles.gridCardBg} resizeMode="cover" />
+              
+              <View style={styles.gridCardFooter}>
+                <View style={styles.systemAvatarPlaceholder}>
+                  <Icon name="server-outline" size={10} color="#00E5FF" />
+                </View>
+                <Text style={styles.gridCardUser} numberOfLines={1}>System</Text>
+              </View>
+            </View>
           </View>
-        )}
+
+          {/* Explore More Card */}
+          <TouchableOpacity style={styles.exploreCard} activeOpacity={0.85}>
+            <View style={styles.exploreIconCircle}>
+              <Icon name="compass-outline" size={26} color="#00E5FF" />
+            </View>
+            <Text style={styles.exploreTitle}>Explore More</Text>
+            <Text style={styles.exploreSubtitle}>
+              Discover updates from across your secure network.
+            </Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
-      {/* ── FAB ── */}
+      {/* Floating Plus FAB */}
       <TouchableOpacity style={styles.fab} onPress={openComposer} activeOpacity={0.85}>
-        <Icon name="add" size={30} color={colors.white} />
+        <Icon name="add" size={26} color="#080E1A" />
       </TouchableOpacity>
 
       {/* ── Composer Modal ── */}
@@ -290,7 +352,6 @@ const StatusScreen = () => {
             <View style={styles.modalHandle} />
             <Text style={styles.modalTitle}>New Status</Text>
 
-            {/* Image preview */}
             {selectedImage ? (
               <View style={styles.imagePreviewWrap}>
                 <Image source={{ uri: selectedImage }} style={styles.imagePreview} resizeMode="cover" />
@@ -303,12 +364,11 @@ const StatusScreen = () => {
               </View>
             ) : (
               <TouchableOpacity style={styles.photoPickerBtn} onPress={pickImage} activeOpacity={0.7}>
-                <Icon name="image-outline" size={28} color={colors.primaryAccent} />
+                <Icon name="image-outline" size={28} color="#00E5FF" />
                 <Text style={styles.photoPickerText}>Add a photo</Text>
               </TouchableOpacity>
             )}
 
-            {/* Text input */}
             <TextInput
               value={text}
               onChangeText={setText}
@@ -320,7 +380,6 @@ const StatusScreen = () => {
             />
             <Text style={styles.charCount}>{text.length}/700</Text>
 
-            {/* Actions */}
             <View style={styles.modalActions}>
               <TouchableOpacity
                 style={[styles.btn, styles.btnSecondary]}
@@ -335,7 +394,7 @@ const StatusScreen = () => {
                 disabled={!canPost}
               >
                 {posting ? (
-                  <ActivityIndicator size="small" color={colors.white} />
+                  <ActivityIndicator size="small" color="#080E1A" />
                 ) : (
                   <Text style={styles.btnText}>Post</Text>
                 )}
@@ -348,208 +407,316 @@ const StatusScreen = () => {
   );
 };
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
-
-const AVATAR_SIZE = 48;
-
-const styles = StyleSheet.create({
+const styles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: colors.primaryBackground,
   },
+  scrollContent: {
+    paddingBottom: spacing.huge,
+  },
+  // ── Custom NimbusX Logo Header ──
+  customHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.l,
+    paddingTop: Platform.OS === 'ios' ? 12 : 16,
+    paddingBottom: 16,
+    backgroundColor: colors.primaryBackground,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1F2937',
+  },
+  headerLeftBtn: {
+    padding: spacing.xs,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#00E5FF',
+    letterSpacing: 0.5,
+  },
+  headerRightBtn: {
+    padding: spacing.xs,
+  },
+  profileIconOutline: {
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#00E5FF',
+    padding: 2,
+  },
+  // ── Section ──
   section: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xl,
+    paddingHorizontal: spacing.l,
+    paddingTop: spacing.l,
   },
   sectionTitle: {
-    color: colors.primaryAccent,
-    fontWeight: 'bold',
-    marginBottom: spacing.m,
-    fontSize: 11,
-    letterSpacing: 1,
-  },
-  // ── My row ──
-  myRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.secondaryBackground,
-    borderRadius: 16,
-    padding: spacing.l,
-    borderWidth: 1,
-    borderColor: colors.divider,
-    marginBottom: spacing.m,
-  },
-  contactRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.secondaryBackground,
-    borderRadius: 16,
-    padding: spacing.l,
-    borderWidth: 1,
-    borderColor: colors.divider,
-    marginBottom: spacing.m,
-  },
-  avatarWrap: {
-    position: 'relative',
-    width: AVATAR_SIZE + 6,
-    height: AVATAR_SIZE + 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarImg: {
-    width: AVATAR_SIZE,
-    height: AVATAR_SIZE,
-    borderRadius: AVATAR_SIZE / 2,
-    backgroundColor: colors.cardBackground,
-  },
-  avatarPlaceholder: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.primaryAccent,
-  },
-  avatarInitial: {
-    color: colors.white,
-    fontWeight: 'bold',
-    fontSize: 20,
-  },
-  ring: {
-    position: 'absolute',
-    width: AVATAR_SIZE + 6,
-    height: AVATAR_SIZE + 6,
-    borderRadius: (AVATAR_SIZE + 6) / 2,
-  },
-  ringBadge: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: colors.primaryAccent,
-    borderRadius: 8,
-    minWidth: 16,
-    height: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 3,
-  },
-  ringBadgeText: {
-    color: colors.white,
-    fontSize: 9,
-    fontWeight: 'bold',
-  },
-  addBadge: {
-    position: 'absolute',
-    bottom: 0,
-    right: -2,
-    backgroundColor: colors.success,
-    borderRadius: 10,
-    width: 20,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: colors.primaryBackground,
-  },
-  myText: {
-    flex: 1,
-    marginLeft: spacing.l,
-  },
-  myTitle: {
     color: colors.textPrimary,
-    fontSize: typography.fontSize.medium,
-    fontWeight: '600',
+    fontWeight: '700',
+    fontSize: 18,
+    marginBottom: spacing.l,
   },
-  mySubTitle: {
-    color: colors.textSecondary,
-    marginTop: 2,
-    fontSize: typography.fontSize.small,
+  // ── Updates Row ──
+  updatesScroll: {
+    gap: spacing.m,
+    paddingRight: spacing.l,
   },
-  // ── Cards ──
-  card: {
-    flexDirection: 'row',
+  avatarColumn: {
     alignItems: 'center',
-    backgroundColor: colors.secondaryBackground,
-    borderRadius: 14,
+    width: 68,
+  },
+  avatarBorderWrapper: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: '#374151',
+  },
+  avatarBorderWrapperActive: {
+    borderColor: '#00E5FF',
+  },
+  addStatusCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#1E293B',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarLabel: {
+    color: colors.textSecondary,
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 6,
+    textAlign: 'center',
+  },
+  // ── Discover Feed ──
+  discoverCardLarge: {
+    height: 220,
+    borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: colors.divider,
+    borderColor: '#1F2937',
+    marginBottom: spacing.m,
+    position: 'relative',
+  },
+  largeCardBg: {
+    width: '100%',
+    height: '100%',
+  },
+  largeCardBgTextOnly: {
+    backgroundColor: '#1E293B',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xl,
+  },
+  statusTextLarge: {
+    color: colors.textPrimary,
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  statusTextSmall: {
+    color: colors.textPrimary,
+    fontSize: 13,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  largeCardHeader: {
+    position: 'absolute',
+    top: spacing.m,
+    left: spacing.m,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(8,14,26,0.6)',
+    borderRadius: 14,
+    paddingHorizontal: spacing.s,
+    paddingVertical: spacing.xxs,
+  },
+  largeCardUser: {
+    color: colors.textPrimary,
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: spacing.xs,
+  },
+  realStatusDesc: {
+    position: 'absolute',
+    bottom: 60,
+    left: spacing.m,
+    right: spacing.m,
+    backgroundColor: 'rgba(8,14,26,0.6)',
+    borderRadius: 10,
+    padding: spacing.s,
+  },
+  realStatusDescSmall: {
+    position: 'absolute',
+    bottom: 54,
+    left: spacing.m,
+    right: spacing.m,
+    backgroundColor: 'rgba(8,14,26,0.65)',
+    borderRadius: 10,
+    padding: spacing.s,
+  },
+  realStatusDescText: {
+    color: colors.textPrimary,
+    fontSize: 12,
+  },
+  replyOverlay: {
+    position: 'absolute',
+    bottom: spacing.m,
+    left: spacing.m,
+    right: spacing.m,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(8,14,26,0.65)',
+    borderRadius: 18,
+    paddingLeft: spacing.m,
+    paddingRight: 3,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  replyInput: {
+    flex: 1,
+    color: colors.textPrimary,
+    fontSize: 13,
+    paddingVertical: Platform.OS === 'ios' ? 8 : 4,
+  },
+  replySendBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#00E5FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  // ── Discover Grid ──
+  discoverGrid: {
+    flexDirection: 'row',
+    gap: spacing.m,
     marginBottom: spacing.m,
   },
-  cardTextOnly: {
+  gridCard: {
+    flex: 1,
+    height: 140,
+    borderRadius: 18,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#1F2937',
+    position: 'relative',
+  },
+  gridCardBg: {
+    width: '100%',
+    height: '100%',
+  },
+  activeIndicatorDot: {
+    position: 'absolute',
+    top: spacing.s,
+    right: spacing.s,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#00E5FF',
+    borderWidth: 2,
+    borderColor: '#1E293B',
+  },
+  gridCardFooter: {
+    position: 'absolute',
+    bottom: spacing.s,
+    left: spacing.s,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(8,14,26,0.6)',
+    borderRadius: 10,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 2,
+    maxWidth: '85%',
+  },
+  gridCardUser: {
+    color: colors.textPrimary,
+    fontSize: 10,
+    fontWeight: '600',
+    marginLeft: spacing.xxs,
+  },
+  systemAvatarPlaceholder: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: 'rgba(8,14,26,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  // ── Explore Card ──
+  exploreCard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 20,
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.l,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#1F2937',
+    marginTop: spacing.s,
+  },
+  exploreIconCircle: {
     width: 52,
     height: 52,
-    alignItems: 'center',
+    borderRadius: 26,
+    backgroundColor: 'rgba(0, 229, 255, 0.1)',
     justifyContent: 'center',
-    backgroundColor: colors.cardBackground,
-  },
-  cardImage: {
-    width: 72,
-    height: 72,
-  },
-  cardBody: {
-    flex: 1,
-    padding: spacing.m,
-  },
-  cardText: {
-    color: colors.textPrimary,
-    fontSize: typography.fontSize.regular,
-    marginBottom: 4,
-  },
-  cardTime: {
-    color: colors.textSecondary,
-    fontSize: typography.fontSize.small,
-  },
-  // ── Empty state ──
-  emptyWrap: {
-    paddingVertical: 60,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xxl,
+    marginBottom: spacing.m,
   },
-  emptyTitle: {
-    marginTop: spacing.l,
+  exploreTitle: {
     color: colors.textPrimary,
-    fontWeight: 'bold',
-    fontSize: typography.fontSize.medium,
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: spacing.xs,
   },
-  emptyText: {
-    marginTop: spacing.xs,
+  exploreSubtitle: {
     color: colors.textSecondary,
-    fontSize: typography.fontSize.small,
+    fontSize: 12,
     textAlign: 'center',
-    lineHeight: 20,
+    paddingHorizontal: spacing.m,
+    lineHeight: 18,
   },
   // ── FAB ──
   fab: {
     position: 'absolute',
-    right: spacing.xxl,
-    bottom: spacing.xxl,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: colors.primaryAccent,
+    right: spacing.l,
+    bottom: spacing.l,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#00E5FF',
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 6,
-    shadowColor: colors.primaryAccent,
+    elevation: 4,
+    shadowColor: '#00E5FF',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   // ── Modal ──
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0,0,0,0.65)',
   },
   modalDismiss: {
     flex: 1,
   },
   modalCard: {
-    backgroundColor: colors.secondaryBackground,
+    backgroundColor: '#1E293B',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderWidth: 1,
     borderBottomWidth: 0,
-    borderColor: colors.divider,
+    borderColor: '#374151',
     padding: spacing.xl,
     paddingBottom: Platform.OS === 'ios' ? 36 : spacing.xl,
   },
@@ -558,34 +725,32 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: colors.divider,
+    backgroundColor: '#4B5563',
     marginBottom: spacing.l,
   },
   modalTitle: {
     color: colors.textPrimary,
-    fontSize: typography.fontSize.large,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '700',
     marginBottom: spacing.l,
   },
-  // ── Photo picker ──
   photoPickerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.cardBackground,
+    backgroundColor: '#111827',
     borderRadius: 14,
     padding: spacing.l,
     borderWidth: 1,
-    borderColor: colors.divider,
+    borderColor: '#374151',
     borderStyle: 'dashed',
     marginBottom: spacing.l,
   },
   photoPickerText: {
-    color: colors.primaryAccent,
+    color: '#00E5FF',
     fontWeight: '600',
-    fontSize: typography.fontSize.medium,
+    fontSize: 14,
     marginLeft: spacing.m,
   },
-  // ── Image preview ──
   imagePreviewWrap: {
     borderRadius: 14,
     overflow: 'hidden',
@@ -601,19 +766,18 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: spacing.m,
     right: spacing.m,
-    backgroundColor: colors.primaryBackground,
+    backgroundColor: 'rgba(8,14,26,0.7)',
     borderRadius: 12,
   },
-  // ── Text input ──
   input: {
     minHeight: 80,
     color: colors.textPrimary,
-    backgroundColor: colors.cardBackground,
+    backgroundColor: '#111827',
     borderRadius: 14,
     padding: spacing.l,
     borderWidth: 1,
-    borderColor: colors.divider,
-    fontSize: typography.fontSize.regular,
+    borderColor: '#374151',
+    fontSize: 15,
     textAlignVertical: 'top',
   },
   charCount: {
@@ -623,13 +787,12 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: spacing.l,
   },
-  // ── Buttons ──
   modalActions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
   },
   btn: {
-    backgroundColor: colors.primaryAccent,
+    backgroundColor: '#00E5FF',
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.m,
     borderRadius: 12,
@@ -641,20 +804,20 @@ const styles = StyleSheet.create({
     opacity: 0.45,
   },
   btnText: {
-    color: colors.white,
-    fontWeight: 'bold',
-    fontSize: typography.fontSize.regular,
+    color: '#080E1A',
+    fontWeight: '700',
+    fontSize: 14,
   },
   btnSecondary: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: colors.divider,
+    borderColor: '#4B5563',
   },
   btnSecondaryText: {
     color: colors.textSecondary,
-    fontWeight: 'bold',
-    fontSize: typography.fontSize.regular,
+    fontWeight: '700',
+    fontSize: 14,
   },
-});
+}));
 
 export default StatusScreen;
