@@ -1,16 +1,20 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { User } from '@types';
 
+export type StorageMode = 'local' | 'cloud';
+
 interface AuthState {
   user: User | null;
   loading: boolean;
   error: string | null;
+  storageMode: StorageMode | null; // null = not yet chosen (triggers onboarding)
 }
 
 const initialState: AuthState = {
   user: null,
-  loading: false, // Must be false — AppNavigator tracks its own 'initialized' flag
+  loading: false,
   error: null,
+  storageMode: null,
 };
 
 const authSlice = createSlice({
@@ -27,13 +31,20 @@ const authSlice = createSlice({
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
+    setStorageMode: (state, action: PayloadAction<StorageMode>) => {
+      state.storageMode = action.payload;
+    },
     logout: (state) => {
       state.user = null;
       state.loading = false;
       state.error = null;
+      // NOTE: storageMode is intentionally preserved through logout.
+      // In Local mode, chats persist on-device. The user's storage
+      // preference survives logout and is only cleared on uninstall
+      // or manual account wipe.
     },
   },
 });
 
-export const { setUser, setLoading, setError, logout } = authSlice.actions;
+export const { setUser, setLoading, setError, setStorageMode, logout } = authSlice.actions;
 export default authSlice.reducer;

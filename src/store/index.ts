@@ -7,15 +7,16 @@ import userReducer from './slices/userSlice';
 import chatReducer from './slices/chatSlice';
 import messageReducer from './slices/messageSlice';
 import groupReducer from './slices/groupSlice';
+import settingsReducer from './slices/settingsSlice';
 
 // Single, flat persist config — no nested persistReducer calls.
 // Nested persist was causing a rehydration race that could hang PersistGate.
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
-  // Persist auth (user field) + user slice + messages for continuity across sessions.
+  // Persist auth (user field) + user slice + messages + settings for continuity across sessions.
   // Chats and groups are NOT persisted to avoid stale data.
-  whitelist: ['auth', 'user', 'messages'],
+  whitelist: ['auth', 'user', 'messages', 'settings'],
   // Exclude transient fields from the auth slice so loading:true is never persisted.
   blacklist: [],
 };
@@ -26,6 +27,7 @@ const rootReducer = combineReducers({
   chats: chatReducer,
   messages: messageReducer,
   groups: groupReducer,
+  settings: settingsReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
