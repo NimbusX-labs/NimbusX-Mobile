@@ -6,6 +6,7 @@ import { StatusBar, LogBox, View, ActivityIndicator } from 'react-native';
 import { store, persistor } from '@store/index';
 import AppNavigator from '@navigation/AppNavigator';
 import ErrorBoundary from '@components/common/ErrorBoundary';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 // Silence noisy development-only warnings
 LogBox.ignoreLogs([
@@ -27,17 +28,18 @@ const SafePersistGate = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setTimedOut(true);
-    }, 3000);
+    }, 1500);
     return () => clearTimeout(timer);
   }, []);
 
-  if (timedOut) {
-    return <>{children}</>;
-  }
-
   return (
-    <PersistGate loading={<LoadingFallback />} persistor={persistor}>
-      {children}
+    <PersistGate persistor={persistor}>
+      {(bootstrapped) => {
+        if (bootstrapped || timedOut) {
+          return children;
+        }
+        return <LoadingFallback />;
+      }}
     </PersistGate>
   );
 };
@@ -46,10 +48,11 @@ const App = () => {
   return (
     <Provider store={store}>
       <SafePersistGate>
-        <ErrorBoundary>
-          <StatusBar barStyle="light-content" backgroundColor="#15202B" />
-          <AppNavigator />
-        </ErrorBoundary>
+        <SafeAreaProvider>
+          <ErrorBoundary>
+            <AppNavigator />
+          </ErrorBoundary>
+        </SafeAreaProvider>
       </SafePersistGate>
     </Provider>
   );
