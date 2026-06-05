@@ -21,33 +21,35 @@ import { spacing } from '@theme/spacing';
 import { typography } from '@theme/typography';
 import { useAuth } from '@hooks/useAuth';
 
-type RegisterScreenNavigationProp = StackNavigationProp<
+type ForgotPasswordScreenNavigationProp = StackNavigationProp<
   AuthStackParamList,
-  'Register'
+  'ForgotPassword'
 >;
 
-const RegisterScreen = () => {
+const ForgotPasswordScreen = () => {
   const colors = useThemeColors();
-  const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [focusedField, setFocusedField] = useState<'name' | 'email' | 'password' | null>(null);
-  const { register, loading } = useAuth();
-  const navigation = useNavigation<RegisterScreenNavigationProp>();
+  const [focusedField, setFocusedField] = useState<'email' | null>(null);
+  const { resetPassword, loading } = useAuth();
+  const navigation = useNavigation<ForgotPasswordScreenNavigationProp>();
 
-  const handleRegister = async () => {
-    if (!email || !password || !displayName) {
-      Alert.alert('Error', 'Please fill in all fields.');
+  const handleReset = async () => {
+    if (!email) {
+      Alert.alert('Error', 'Please enter your email address.');
       return;
     }
 
     try {
-      await register(email.trim(), password, displayName.trim());
+      await resetPassword(email.trim());
+      Alert.alert(
+        'Email Sent',
+        'If an account exists with this email, a password reset link has been sent.',
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
+      );
     } catch (error: any) {
       Alert.alert(
-        'Registration Failed',
-        error.message || 'Could not create account.',
+        'Reset Failed',
+        error.message || 'An error occurred. Please try again later.'
       );
     }
   };
@@ -64,26 +66,10 @@ const RegisterScreen = () => {
             style={styles.logo}
             resizeMode="contain"
           />
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Sign up to get started.</Text>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Display Name</Text>
-            <TextInput
-              style={[
-                styles.input,
-                focusedField === 'name' && styles.inputFocused,
-              ]}
-              placeholder="John Doe"
-              placeholderTextColor={colors.textTertiary}
-              value={displayName}
-              onChangeText={setDisplayName}
-              autoCapitalize="words"
-              editable={!loading}
-              onFocus={() => setFocusedField('name')}
-              onBlur={() => setFocusedField(null)}
-            />
-          </View>
+          <Text style={styles.title}>Reset Password</Text>
+          <Text style={styles.subtitle}>
+            Enter your email address and we'll send you a link to reset your password.
+          </Text>
 
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Email Address</Text>
@@ -105,53 +91,15 @@ const RegisterScreen = () => {
             />
           </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Password</Text>
-            <View
-              style={[
-                styles.passwordRow,
-                focusedField === 'password' && styles.passwordRowFocused,
-              ]}
-            >
-              <TextInput
-                style={[styles.input, styles.passwordInput]}
-                placeholder="Choose a strong password"
-                placeholderTextColor={colors.textTertiary}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
-                autoCorrect={false}
-                editable={!loading}
-                onFocus={() => setFocusedField('password')}
-                onBlur={() => setFocusedField(null)}
-              />
-              <TouchableOpacity
-                style={styles.eyeButton}
-                onPress={() => setShowPassword((prev) => !prev)}
-                activeOpacity={0.7}
-              >
-                <Icon
-                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                  size={20}
-                  color={colors.textSecondary}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-
           <TouchableOpacity
-            style={[
-              styles.button,
-              (!email || !password || !displayName) && styles.buttonDisabled,
-            ]}
-            onPress={handleRegister}
-            disabled={!email || !password || !displayName || loading}
+            style={[styles.button, !email && styles.buttonDisabled]}
+            onPress={handleReset}
+            disabled={!email || loading}
           >
             {loading ? (
               <ActivityIndicator color={colors.primaryBackground} />
             ) : (
-              <Text style={styles.buttonText}>Register</Text>
+              <Text style={styles.buttonText}>Send Reset Link</Text>
             )}
           </TouchableOpacity>
 
@@ -161,10 +109,10 @@ const RegisterScreen = () => {
             disabled={loading}
             activeOpacity={0.7}
           >
-            <Text style={styles.linkText}>
-              Already have an account?{' '}
-              <Text style={styles.linkActionText}>Login</Text>
-            </Text>
+            <View style={styles.backRow}>
+              <Icon name="arrow-back-outline" size={16} color={colors.primaryAccent} style={styles.backIcon} />
+              <Text style={styles.linkText}>Back to Login</Text>
+            </View>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -204,6 +152,8 @@ const styles = createThemedStyles((colors) => ({
     color: colors.textSecondary,
     marginBottom: spacing.xxl,
     textAlign: 'center',
+    lineHeight: 22,
+    paddingHorizontal: spacing.m,
   },
   inputContainer: {
     marginBottom: spacing.l,
@@ -227,27 +177,6 @@ const styles = createThemedStyles((colors) => ({
   },
   inputFocused: {
     borderColor: colors.primaryAccent,
-  },
-  passwordRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.inputBackground,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.divider,
-    paddingRight: spacing.s,
-  },
-  passwordRowFocused: {
-    borderColor: colors.primaryAccent,
-  },
-  passwordInput: {
-    flex: 1,
-    borderWidth: 0,
-    borderColor: 'transparent',
-    backgroundColor: 'transparent',
-  },
-  eyeButton: {
-    padding: spacing.s,
   },
   button: {
     backgroundColor: colors.primaryAccent,
@@ -273,14 +202,18 @@ const styles = createThemedStyles((colors) => ({
     marginTop: spacing.xl,
     alignItems: 'center',
   },
-  linkText: {
-    color: colors.textSecondary,
-    fontSize: typography.fontSize.medium,
+  backRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  linkActionText: {
+  backIcon: {
+    marginRight: spacing.xs,
+  },
+  linkText: {
     color: colors.primaryAccent,
+    fontSize: typography.fontSize.medium,
     fontWeight: '600',
   },
 }));
 
-export default RegisterScreen;
+export default ForgotPasswordScreen;
