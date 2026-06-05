@@ -14,7 +14,7 @@ import { ChatStackParamList } from '@navigation/types';
 import { useAppSelector } from '@store/hooks';
 import { chatSelectors } from '@store/slices/chatSlice';
 import { useChats } from '@hooks/useChats';
-import { colors } from '@theme/colors';
+import { useThemeColors, createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
 import { typography } from '@theme/typography';
 
@@ -23,6 +23,7 @@ import ChatListItem from '@components/chat/ChatListItem';
 type NavigationProp = StackNavigationProp<ChatStackParamList>;
 
 const GroupsScreen = () => {
+  const colors = useThemeColors();
   const navigation = useNavigation<NavigationProp>();
   const user = useAppSelector((state) => state.auth.user);
   const chats = useAppSelector(chatSelectors.selectAll);
@@ -58,72 +59,82 @@ const GroupsScreen = () => {
         ListEmptyComponent={
           !loading ? (
             <View style={styles.empty}>
-              <Icon name="people-outline" size={80} color={colors.divider} />
+              <View style={styles.emptyIconWrap}>
+                <Icon name="people-outline" size={48} color={colors.textTertiary} />
+              </View>
               <Text style={styles.emptyTitle}>No groups yet</Text>
-              <Text style={styles.emptyText}>Create a group to start chatting with multiple people.</Text>
+              <Text style={styles.emptyText}>
+                Create a group to start chatting with multiple people.
+              </Text>
             </View>
           ) : null
         }
       />
 
-      <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('CreateGroup')}>
-        <Icon name="people" size={28} color={colors.white} />
-        <Text style={styles.fabText}>Create Group</Text>
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => navigation.navigate('CreateGroup')}
+        activeOpacity={0.8}
+      >
+        <Icon name="add" size={26} color={colors.white} />
       </TouchableOpacity>
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: colors.primaryBackground,
   },
   listContent: {
-    paddingBottom: 120,
+    paddingBottom: 100,
   },
   empty: {
     flex: 1,
-    paddingTop: 90,
-    paddingHorizontal: spacing.xxl,
+    paddingTop: 80,
+    paddingHorizontal: spacing.xxxl,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  emptyIconWrap: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: colors.cardBackground,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.l,
   },
   emptyTitle: {
     color: colors.textPrimary,
     fontSize: typography.fontSize.large,
-    fontWeight: 'bold',
-    marginTop: spacing.l,
+    fontWeight: '600',
     textAlign: 'center',
   },
   emptyText: {
     color: colors.textSecondary,
-    fontSize: typography.fontSize.medium,
+    fontSize: typography.fontSize.regular,
     marginTop: spacing.s,
     textAlign: 'center',
+    lineHeight: typography.lineHeight.regular,
   },
   fab: {
     position: 'absolute',
-    right: spacing.xxl,
+    right: spacing.xl,
     bottom: spacing.xxl,
     backgroundColor: colors.primaryAccent,
-    flexDirection: 'row',
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-    height: 56,
-    borderRadius: 28,
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
-  fabText: {
-    color: colors.white,
-    fontWeight: 'bold',
-    marginLeft: spacing.m,
-    fontSize: typography.fontSize.medium,
-  },
-});
+}));
 
 export default GroupsScreen;

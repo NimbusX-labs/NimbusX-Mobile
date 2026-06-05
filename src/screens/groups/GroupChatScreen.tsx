@@ -14,38 +14,43 @@ import {
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
-import { messagesSelectors, upsertMessage, removeMessage } from '@store/slices/messageSlice';
+import { messagesSelectors, upsertMessage, removeMessage, addToOfflineQueue } from '@store/slices/messageSlice';
 import { ChatStackParamList } from '@navigation/types';
 import { useMessages } from '@hooks/useMessages';
 import { firestoreService } from '@services/supabase/database';
 import { storageService } from '@services/supabase/storage';
-import { colors } from '@theme/colors';
+import { ChatAttachment, createOptimisticMediaMessage, sendMediaMessage } from '@services/chatMedia';
+import { useThemeColors, createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
 import { generateUUID } from '@utils/uuid';
 import { Message } from '@types';
 import ImagePreviewModal from '@components/chat/ImagePreviewModal';
-
-// Components
+// Components
 import MessageBubble from '@components/chat/MessageBubble';
 import ChatInput from '@components/chat/ChatInput';
 
 type GroupChatRouteProp = RouteProp<ChatStackParamList, 'GroupChat'>;
 
-const HeaderRight = React.memo(({ chatId, navigation }: { chatId: string; navigation: any }) => (
-  <TouchableOpacity 
-    style={{ marginRight: spacing.m }}
-    onPress={() => navigation.navigate('GroupInfo', { chatId })}
-  >
-    <Icon name="information-circle-outline" size={28} color={colors.textPrimary} />
-  </TouchableOpacity>
-));
+const HeaderRight = React.memo(({ chatId, navigation }: { chatId: string; navigation: any }) => {
+  const colors = useThemeColors();
+  return (
+    <TouchableOpacity 
+      style={{ marginRight: spacing.m }}
+      onPress={() => navigation.navigate('GroupInfo', { chatId })}
+    >
+      <Icon name="information-circle-outline" size={28} color={colors.textPrimary} />
+    </TouchableOpacity>
+  );
+});
 
 const GroupChatScreen = () => {
+  const colors = useThemeColors();
   const route = useRoute<GroupChatRouteProp>();
   const navigation = useNavigation<any>();
   const { chatId, groupName } = route.params;
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
+  const storageMode = useAppSelector((state) => state.auth.storageMode);
   
   // Image preview state
   const [previewImageUri, setPreviewImageUri] = React.useState<string | null>(null);
@@ -167,6 +172,41 @@ const GroupChatScreen = () => {
     } catch (error) {
       console.error('Failed to send sticker:', error);
       dispatch(upsertMessage({ ...tempMsg, status: 'failed' }));
+    }
+  };
+
+  const handleSendMedia = async (attachment: ChatAttachment) => {
+    if (!user) return;
+
+    const messageId = generateUUID();
+    const tempMsg = createOptimisticMediaMessage(chatId, user.uid, messageId, attachment);
+
+    dispatch(upsertMessage(tempMsg));
+
+    try {
+      const sentMessage = await sendMediaMessage({
+        chatId,
+        senderId: user.uid,
+        messageId,
+        attachment,
+        storageMode,
+      });
+
+      dispatch(upsertMessage(sentMessage));
+    } catch (error) {
+      console.error('Failed to send group media:', error);
+      dispatch(upsertMessage({
+        ...tempMsg,
+        status: 'failed',
+      }));
+      dispatch(addToOfflineQueue(tempMsg));
+      Alert.alert(
+        'Send Failed',
+        storageMode === 'cloud'
+          ? 'Could not upload the file to cloud. Please check your connection and try again.'
+          : 'Could not save and send the file. Please try again.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
@@ -336,6 +376,7 @@ const GroupChatScreen = () => {
         <ChatInput
           onSend={handleSend}
           onTyping={() => {}}
+          onSendMedia={handleSendMedia}
           onSendGif={handleSendGif}
           onSendSticker={handleSendSticker}
           editingMessage={editingMessage}
@@ -354,7 +395,7 @@ const GroupChatScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: colors.primaryBackground,
@@ -363,14 +404,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    paddingVertical: spacing.m,
+    paddingVertical: spacing.s,
   },
   senderName: {
     color: colors.primaryAccent,
     fontSize: 10,
     marginLeft: spacing.xl,
     marginBottom: -spacing.xs,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
   // ── Pinned Banner Styles ──
   pinnedBanner: {
@@ -380,8 +421,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.secondaryBackground,
     paddingHorizontal: spacing.l,
     paddingVertical: spacing.s,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.divider,
   },
   pinnedContent: {
     flexDirection: 'row',
@@ -397,6 +438,6 @@ const styles = StyleSheet.create({
   unpinButton: {
     padding: spacing.xs,
   },
-});
+}));
 
 export default GroupChatScreen;
