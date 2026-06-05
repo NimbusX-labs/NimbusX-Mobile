@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, Animated, DimensionValue } from 'react-native';
-import { colors } from '@theme/colors';
+import { useThemeColors, createThemedStyles } from '@theme/colors';
 
 interface LoadingSkeletonProps {
   width?: DimensionValue;
@@ -15,6 +15,7 @@ const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
   borderRadius = 4,
   style 
 }) => {
+  const colors = useThemeColors();
   const animatedValue = React.useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -50,10 +51,10 @@ const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles((colors) => ({
   skeleton: {
     backgroundColor: colors.cardBackground,
   },
-});
+}));
 
 export default LoadingSkeleton;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { colors } from '@theme/colors';
+import { useThemeColors, createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
 import { typography } from '@theme/typography';
 
@@ -12,6 +12,7 @@ interface EmptyStateProps {
 }
 
 const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, message }) => {
+  const colors = useThemeColors();
   return (
     <View style={styles.container}>
       <Icon name={icon} size={80} color={colors.divider} />
@@ -21,7 +22,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, message }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     justifyContent: 'center',
@@ -42,6 +43,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.s,
     textAlign: 'center',
   },
-});
+}));
 
 export default React.memo(EmptyState);
