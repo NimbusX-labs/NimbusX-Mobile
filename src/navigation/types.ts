@@ -1,12 +1,14 @@
 export type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
+  ForgotPassword: undefined;
 };
 
 export type MainTabParamList = {
   Chats: undefined;
-  Groups: undefined;
   Status: undefined;
+  Groups: undefined;
+  Files: undefined;
   Settings: undefined;
 };
 
@@ -17,11 +19,22 @@ export type ChatStackParamList = {
   NewChat: undefined;
   CreateGroup: undefined;
   GroupInfo: { chatId: string };
+  ContactInfo: { chatId: string; otherUserName?: string; otherUserAvatar?: string };
   Profile: undefined;
+  StorageSettings: undefined;
   AccountSettings: undefined;
   ChatsSettings: undefined;
   NotificationsSettings: undefined;
   HelpSettings: undefined;
+  TermsPrivacy: undefined;
+  HelpCenter: undefined;
+  ContactUs: undefined;
+  AppInfo: undefined;
+  PrivacySettings: undefined;
+  SecuritySettings: undefined;
+  ChangeNumber: undefined;
+  Devices: undefined;
+  RequestInfo: undefined;
 };
 
 export type RootStackParamList = {
