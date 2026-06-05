@@ -260,30 +260,82 @@ export const firestoreService = {
   },
 
   /**
-   * Update or create a user profile in the database
+   * Update or create a user profile in the database.
+   * Uses RPC (SECURITY DEFINER) when available to avoid RLS insert failures.
    */
   async saveUser(userObj: Partial<User> & { uid: string }) {
     const { uid, ...data } = userObj;
     const email = data.email ? data.email.toLowerCase().trim() : undefined;
 
-    const upsertData: any = {
-      id: uid,
+    if (!email) {
+      console.warn('saveUser: email is required to create/update a profile');
+      return;
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const sessionUid = sessionData.session?.user?.id;
+    if (sessionUid && sessionUid !== uid) {
+      console.warn('saveUser: session user does not match uid; using session user');
+    }
+
+    const profileId = sessionUid || uid;
+
+    const { error: rpcError } = await supabase.rpc('upsert_own_profile', {
+      p_email: email,
+      p_display_name: data.displayName ?? null,
+      p_avatar_url: data.avatarUrl ?? null,
+      p_status: data.status ?? null,
+    });
+
+    if (!rpcError) {
+      return;
+    }
+
+    const rpcMissing =
+      rpcError.code === '42883' ||
+      rpcError.code === 'PGRST202' ||
+      /upsert_own_profile/i.test(rpcError.message || '');
+
+    if (!rpcMissing) {
+      console.error('Save user failed (rpc):', rpcError);
+      throw rpcError;
+    }
+
+    const patch: Record<string, unknown> = {
+      email,
+      updated_at: new Date().toISOString(),
+    };
+    if (data.displayName !== undefined) patch.display_name = data.displayName;
+    if (data.avatarUrl !== undefined) patch.avatar_url = data.avatarUrl;
+    if (data.status !== undefined) patch.status = data.status;
+
+    const { data: updatedRows, error: updateError } = await supabase
+      .from('profiles')
+      .update(patch)
+      .eq('id', profileId)
+      .select('id');
+
+    if (!updateError && updatedRows && updatedRows.length > 0) {
+      return;
+    }
+
+    const insertRow: Record<string, unknown> = {
+      id: profileId,
+      email,
+      display_name: data.displayName ?? '',
+      avatar_url: data.avatarUrl ?? '',
+      status: data.status ?? 'Hey there! I am using NimbusX',
       updated_at: new Date().toISOString(),
     };
 
-    if (email !== undefined) upsertData.email = email;
-    if (data.displayName !== undefined) upsertData.display_name = data.displayName;
-    if (data.avatarUrl !== undefined) upsertData.avatar_url = data.avatarUrl;
-    if (data.status !== undefined) upsertData.status = data.status;
+    const { error: insertError } = await supabase.from('profiles').insert(insertRow);
 
-    const { error } = await supabase
-      .from('profiles')
-      .update(upsertData)
-      .eq('id', uid);
-
-    if (error) {
-      console.error('Save user failed:', error);
-      throw error;
+    if (insertError) {
+      console.error(
+        'Save user failed. Run supabase-fix-profiles-rls.sql in Supabase SQL Editor.',
+        insertError,
+      );
+      throw insertError;
     }
   },
 
@@ -628,4 +680,21 @@ export const firestoreService = {
       throw error;
     }
   },
+
+  /**
+   * Clear all messages in a specific chat
+   */
+  async clearMessages(chatId: string) {
+    if (!chatId) return;
+    const { error } = await supabase
+      .from('messages')
+      .delete()
+      .eq('chat_id', chatId);
+
+    if (error) {
+      console.error('Clear messages failed:', error);
+      throw error;
+    }
+  },
 };
+
