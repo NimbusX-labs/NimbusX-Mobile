@@ -37,6 +37,15 @@ const messageSlice = createSlice({
       messageAdapter.removeAll(state);
       state.offlineQueue = [];
     },
+    clearChatMessages: (state, action: PayloadAction<{ chatId: string }>) => {
+      const idsToRemove = Object.values(state.entities)
+        .filter((m): m is Message => !!m && m.chatId === action.payload.chatId)
+        .map((m) => m.id);
+      messageAdapter.removeMany(state, idsToRemove);
+      state.offlineQueue = state.offlineQueue.filter(
+        (m) => m.chatId !== action.payload.chatId
+      );
+    },
   },
 });
 
@@ -48,7 +57,8 @@ export const {
   addToOfflineQueue,
   clearOfflineQueue,
   setMessagesLoading,
-  clearAllMessages
+  clearAllMessages,
+  clearChatMessages
 } = messageSlice.actions;
 
 export const messagesSelectors = messageAdapter.getSelectors<RootState>(
