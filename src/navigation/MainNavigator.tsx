@@ -16,7 +16,7 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 const getTabBarIcon = (routeName: string, focused: boolean, color: string, size: number) => {
   let iconName = '';
   if (routeName === 'Chats') iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
-  else if (routeName === 'Status') iconName = focused ? 'aperture' : 'aperture-outline';
+  else if (routeName === 'Status') iconName = focused ? 'pulse' : 'pulse-outline';
   else if (routeName === 'Groups') iconName = focused ? 'people' : 'people-outline';
   else if (routeName === 'Files') iconName = focused ? 'folder' : 'folder-outline';
   else if (routeName === 'Settings') iconName = focused ? 'settings' : 'settings-outline';
@@ -58,7 +58,7 @@ const MainNavigator = () => {
       })}
     >
       <Tab.Screen name="Chats" component={ChatListScreen} options={{ headerShown: false }} />
-      <Tab.Screen name="Status" component={StatusScreen} />
+      <Tab.Screen name="Status" component={StatusScreen} options={{ tabBarLabel: 'Pulse' }} />
       <Tab.Screen name="Groups" component={GroupsScreen} />
       <Tab.Screen name="Files" component={FilesScreen} />
       <Tab.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
