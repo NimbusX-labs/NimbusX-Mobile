@@ -6,6 +6,7 @@ export interface User {
   avatarUrl?: string;
   status?: string;
   lastSeen?: number;
+  publicKey?: string;
 }
 
 export interface Message {
@@ -56,4 +57,5 @@ export interface Status {
   imageUrl?: string;
   createdAt: number;
   expiresAt: number; // 24 hours after creation
+  sharedWith: string[]; // UIDs of recipients who can see this pulse
 }
