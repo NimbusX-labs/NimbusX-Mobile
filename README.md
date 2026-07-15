@@ -1,496 +1,391 @@
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/NimbusX-labs/NimbusX-Mobile/main/docs/assets/logo-dark.svg">
-    <img alt="NimbusX" src="https://raw.githubusercontent.com/NimbusX-labs/NimbusX-Mobile/main/docs/assets/logo-light.svg" width="480">
-  </picture>
-</p>
+<div align="center">
 
-<p align="center">
-  <b>End-to-end encrypted messenger.</b><br/>
-  <sub>React Native · Supabase · tweetnacl · Zero metadata</sub>
-</p>
-
-<p align="center">
-  <a href="https://github.com/NimbusX-labs/NimbusX-Mobile/actions">
-    <img src="https://img.shields.io/github/actions/workflow/status/NimbusX-labs/NimbusX-Mobile/ci.yml?branch=main&label=CI&logo=github&style=flat-square">
-  </a>
-  <a href="https://github.com/NimbusX-labs/NimbusX-Mobile/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-06B6D4?style=flat-square">
-  </a>
-  <a href="https://reactnative.dev/">
-    <img src="https://img.shields.io/badge/React_Native-0.84-61DAFB?style=flat-square&logo=react">
-  </a>
-  <a href="https://www.typescriptlang.org/">
-    <img src="https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat-square&logo=typescript">
-  </a>
-  <a href="https://supabase.com/">
-    <img src="https://img.shields.io/badge/Supabase-3FCF8E?style=flat-square&logo=supabase">
-  </a>
-  <img src="https://img.shields.io/badge/E2EE-Curve25519-00E5FF?style=flat-square">
-</p>
-
----
+<img src="./docs/assets/hero-animated.svg" alt="NimbusX" width="100%" />
 
 <br/>
 
-<p align="center">
-  <a href="#features">Features</a> •
-  <a href="#tech-stack">Tech Stack</a> •
-  <a href="#getting-started">Getting Started</a> •
-  <a href="#architecture">Architecture</a> •
-  <a href="#security">Security</a> •
-  <a href="#contributing">Contributing</a>
-</p>
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&duration=2600&pause=900&color=38BDF8&center=true&vCenter=true&width=650&lines=Private+by+design.;End-to-end+encrypted+messaging.;Real-time+chats%2C+groups+%26+Pulse+stories.;Built+with+React+Native+%2B+Supabase." alt="Typing SVG" />
+
+<br/><br/>
+
+[![Platform](https://img.shields.io/badge/platform-iOS%20%7C%20Android-38BDF8?style=for-the-badge&logo=react&logoColor=white)](#)
+[![React Native](https://img.shields.io/badge/React_Native-0.84-61DAFB?style=for-the-badge&logo=react&logoColor=white)](#)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](#)
+[![Supabase](https://img.shields.io/badge/Backend-Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](#)
+[![License](https://img.shields.io/badge/license-MIT-38BDF8?style=for-the-badge)](#license)
 
 <br/>
 
-<p align="center">
-  <img src="https://github-readme-stats.vercel.app/api/pin/?username=NimbusX-labs&repo=NimbusX-Mobile&theme=tokyonight&hide_border=true&bg_color=0B1120&title_color=00E5FF&icon_color=00E5FF&text_color=9CA3AF">
-</p>
+**NimbusX** is a privacy-first, real-time communication platform — one-to-one chats, groups, ephemeral **Pulse** stories, and true end-to-end encryption, built on a modern React Native + Supabase stack.
+
+[Overview](#-overview) · [Features](#-features) · [Architecture](#-architecture) · [Tech Stack](#-tech-stack) · [Getting Started](#-getting-started) · [Project Structure](#-project-structure) · [Database](#-database-schema) · [Roadmap](#-roadmap) · [Contributing](#-contributing)
+
+</div>
 
 <br/>
 
----
-
-<a name="features"></a>
-
-## ✦ Features
+<img src="./docs/assets/footer-wave.svg" width="100%" alt="divider"/>
 
 <br/>
+
+## 📖 Overview
+
+NimbusX is a full-featured, production-grade messaging application for iOS and Android. It pairs a polished React Native front end with a Supabase backend (Postgres + Realtime + Storage + Auth) and adds a client-side **end-to-end encryption layer** built on Curve25519 and XSalsa20-Poly1305 — so message content never touches the server in plaintext for one-to-one conversations.
+
+It's built the way a startup would ship a v1: typed end-to-end, themeable, offline-resilient, and instrumented for CI from day one.
 
 <table>
-  <tr>
-    <td width="50%" align="center">
-      <br/>
-      <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Locked%20with%20Key.png" width="48"/>
-      <br/>
-      <b>End-to-End Encryption</b>
-      <br/>
-      <sub>Curve25519 ECDH + XSalsa20-Poly1305 via tweetnacl.<br/>Keys generated on-device, never transmitted.</sub>
-      <br/><br/>
-    </td>
-    <td width="50%" align="center">
-      <br/>
-      <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Symbols/Dizzy.png" width="48"/>
-      <br/>
-      <b>Pulse</b>
-      <br/>
-      <sub>Private broadcasts to chosen contacts.<br/>Like a message — but lives in a dedicated feed.</sub>
-      <br/><br/>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-      <br/>
-      <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Busts%20in%20Silhouette.png" width="48"/>
-      <br/>
-      <b>Groups</b>
-      <br/>
-      <sub>Group chats with admin controls,<br/>member management, and E2EE.</sub>
-      <br/><br/>
-    </td>
-    <td width="50%" align="center">
-      <br/>
-      <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Framed%20Picture.png" width="48"/>
-      <br/>
-      <b>Media Sharing</b>
-      <br/>
-      <sub>Images, GIFs, stickers, files, voice.<br/>All encrypted in transit and at rest.</sub>
-      <br/><br/>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-      <br/>
-      <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Shield.png" width="48"/>
-      <br/>
-      <b>Privacy Controls</b>
-      <br/>
-      <sub>Profile visibility, read receipts,<br/>last seen, online status, blocked users.</sub>
-      <br/><br/>
-    </td>
-    <td width="50%" align="center">
-      <br/>
-      <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Key.png" width="48"/>
-      <br/>
-      <b>Safety Codes</b>
-      <br/>
-      <sub>25-digit numeric codes for<br/>out-of-band identity verification.</sub>
-      <br/><br/>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-      <br/>
-      <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Artist%20Palette.png" width="48"/>
-      <br/>
-      <b>Theme System</b>
-      <br/>
-      <sub>Dark / Light / System modes.<br/>Accent variants: Teal, Emerald, Slate.</sub>
-      <br/><br/>
-    </td>
-    <td width="50%" align="center">
-      <br/>
-      <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Link.png" width="48"/>
-      <br/>
-      <b>App Lock</b>
-      <br/>
-      <sub>PIN-based lock screen overlay.<br/>Security notifications on key changes.</sub>
-      <br/><br/>
-    </td>
-  </tr>
+<tr>
+<td width="33%" valign="top">
+
+### 💬 Real conversations
+
+1-to-1 and group messaging with typing indicators, read receipts, replies, edits, and rich media — all in real time.
+
+</td>
+<td width="33%" valign="top">
+
+### 🔐 Private by default
+
+Client-side E2EE for direct messages, safety codes for identity verification, PIN lock, and 2FA.
+
+</td>
+<td width="33%" valign="top">
+
+### ⚡ Built to scale
+
+Typed Redux store, entity adapters, offline queueing, and a Postgres schema with RLS on every table.
+
+</td>
+</tr>
 </table>
 
 <br/>
 
----
+## ✨ Features
 
-<a name="tech-stack"></a>
+<table>
+<tr><th align="left">Category</th><th align="left">Capabilities</th></tr>
 
-## ✦ Tech Stack
+<tr>
+<td><strong>Messaging</strong></td>
+<td>
+
+- One-to-one & group chats with realtime delivery
+- Message replies, edits, pinning
+- Delivery states: `pending → sent → delivered → read`
+- Typing indicators & online presence
+- Offline queue with automatic retry
+</td>
+</tr>
+
+<tr>
+<td><strong>Privacy & Security</strong></td>
+<td>
+
+- End-to-end encryption (Curve25519 ECDH + XSalsa20-Poly1305) for direct messages
+- 25-digit safety codes for out-of-band identity verification
+- App lock (PIN), simulated two-factor authentication
+- Granular privacy controls — read receipts, last seen, profile photo visibility
+- Blocked users management & data export requests
+</td>
+</tr>
+
+<tr>
+<td><strong>Pulse (Stories)</strong></td>
+<td>
+
+- 24-hour ephemeral text/image posts
+- Fine-grained recipient sharing via <code>shared_with</code>
+- Dedicated composer & full-screen viewer
+</td>
+</tr>
+
+<tr>
+<td><strong>Groups</strong></td>
+<td>
+
+- Group creation with avatar, description & multi-select members
+- Admin roles & participant management
+- Group-level notification and media settings
+</td>
+</tr>
+
+<tr>
+<td><strong>Media</strong></td>
+<td>
+
+- Image, document, and file sharing via Supabase Storage
+- Emoji picker + Giphy-powered GIF search
+- Local image caching for fast reloads
+</td>
+</tr>
+
+<tr>
+<td><strong>Personalization</strong></td>
+<td>
+
+- 6 themes: Dark, Light, System, Slate, Teal, Emerald
+- Custom wallpapers, enter-to-send toggle
+- Configurable notification tones, vibration & priority per surface
+</td>
+</tr>
+
+<tr>
+<td><strong>Account & Trust</strong></td>
+<td>
+
+- Email + Google Sign-In
+- Active session / device management
+- Cloud vs. local-only storage mode on first launch
+- Help center, support tickets, ToS & privacy policy screens
+</td>
+</tr>
+</table>
 
 <br/>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black">
-  <img src="https://img.shields.io/badge/React_Native-0.84-61DAFB?style=for-the-badge&logo=react&logoColor=black">
-  <img src="https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white">
-  <img src="https://img.shields.io/badge/Redux_Toolkit-764ABC?style=for-the-badge&logo=redux&logoColor=white">
-  <img src="https://img.shields.io/badge/Supabase-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white">
-  <img src="https://img.shields.io/badge/tweetnacl-00E5FF?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMwMEU1RkYiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9ImNlbnRyYWwiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiMwQjExMjAiIGZvbnQtc2l6ZT0iMjAiIGZvbnQtd2VpZ2h0PSJib2xkIj5FQTwvdGV4dD48L3N2Zz4=&logoColor=black">
-  <img src="https://img.shields.io/badge/React_Navigation_7-8B5CF6?style=for-the-badge&logo=react&logoColor=white">
-</p>
+## 🏗️ Architecture
+
+<div align="center">
+
+```mermaid
+flowchart LR
+    subgraph Client["📱 NimbusX Mobile — React Native"]
+        UI["Screens & Components"]
+        RDX["Redux Toolkit Store\n(auth · chats · messages · groups · settings)"]
+        HOOKS["Realtime Hooks\nuseChats · useMessages · usePresence"]
+        CRYPTO["crypto.ts\nCurve25519 · XSalsa20-Poly1305"]
+        CACHE["Local Cache\nAsyncStorage · RNFS"]
+    end
+
+    subgraph Backend["☁️ Supabase"]
+        AUTH["Auth\nEmail + Google OAuth"]
+        DB[("Postgres\nRLS on every table")]
+        RT["Realtime\nChannels"]
+        STORE["Storage\navatars · chat-media · status-media"]
+    end
+
+    UI --> RDX
+    RDX --> HOOKS
+    HOOKS <--> RT
+    UI --> CRYPTO
+    CRYPTO -.encrypted payload.-> DB
+    RDX --> CACHE
+    UI --> AUTH
+    UI --> STORE
+    RT <--> DB
+```
+
+</div>
+
+**Encryption flow (1-to-1 chats):** the sender fetches the recipient's public key, generates an ephemeral keypair, derives a shared secret via ECDH, and encrypts the message body client-side before it ever reaches Postgres. Decryption happens symmetrically on receipt — the server only ever stores ciphertext.
 
 <br/>
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **Framework** | React 19 + React Native 0.84 | Cross-platform mobile UI |
-| **State** | Redux Toolkit + redux-persist | Client state + AsyncStorage persistence |
-| **Backend** | Supabase (PG, Auth, Realtime, Storage) | Data, auth, live sync, file hosting |
-| **Encryption** | tweetnacl (Curve25519 + XSalsa20-Poly1305) | E2EE message sealing/unsealing |
-| **Navigation** | React Navigation 7 (Stack + Bottom Tabs) | Screen routing |
-| **Auth** | Supabase Auth + Google Sign-In | Identity provider |
+## 🧰 Tech Stack
+
+<div align="center">
+
+![React](https://img.shields.io/badge/React-19.2-61DAFB?style=flat-square&logo=react&logoColor=white)
+![React Native](https://img.shields.io/badge/React_Native-0.84-61DAFB?style=flat-square&logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Redux Toolkit](https://img.shields.io/badge/Redux_Toolkit-2.11-764ABC?style=flat-square&logo=redux&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-2.106-3ECF8E?style=flat-square&logo=supabase&logoColor=white)
+![React Navigation](https://img.shields.io/badge/React_Navigation-7-6C47FF?style=flat-square&logo=react&logoColor=white)
+![TweetNaCl](https://img.shields.io/badge/TweetNaCl-Curve25519-38BDF8?style=flat-square)
+![Jest](https://img.shields.io/badge/Jest-29-C21325?style=flat-square&logo=jest&logoColor=white)
+![ESLint](https://img.shields.io/badge/ESLint-8-4B32C3?style=flat-square&logo=eslint&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white)
+
+</div>
+
+| Layer      | Choice                                       | Why                                                         |
+| ---------- | -------------------------------------------- | ----------------------------------------------------------- |
+| UI runtime | React Native 0.84 + React 19                 | New architecture, first-class TS support                    |
+| Language   | TypeScript (strict)                          | End-to-end type safety, 14 path aliases                     |
+| State      | Redux Toolkit + `redux-persist`              | Predictable state, entity adapters for chats/messages/users |
+| Navigation | React Navigation (stack + bottom tabs)       | Nested auth/main/chat stacks                                |
+| Backend    | Supabase (Postgres, Auth, Realtime, Storage) | Managed Postgres with RLS instead of a bespoke backend      |
+| Encryption | `tweetnacl` (Curve25519 / XSalsa20-Poly1305) | Audited, battle-tested primitives for E2EE                  |
+| Storage    | AsyncStorage + `react-native-fs`             | Persisted Redux slices + local media cache                  |
 
 <br/>
 
----
+## 🚀 Getting Started
 
-<a name="getting-started"></a>
+### Prerequisites
 
-## ✦ Getting Started
+- Node.js ≥ 18, npm
+- A Supabase project (URL + anon key)
+- Xcode (iOS) and/or Android Studio (Android)
+- CocoaPods (iOS)
 
-<br/>
-
-<details>
-<summary><b>📱 Quick Start (3 minutes)</b></summary>
-<br/>
+### Installation
 
 ```bash
 # 1. Clone
 git clone https://github.com/NimbusX-labs/NimbusX-Mobile.git
 cd NimbusX-Mobile
 
-# 2. Install
+# 2. Install dependencies
 npm install
 
-# 3. Launch Metro
+# iOS only
+cd ios && pod install && cd ..
+
+# 3. Configure environment
+cp .env.example .env
+# then set SUPABASE_URL, SUPABASE_ANON_KEY, GOOGLE_WEB_CLIENT_ID
+
+# 4. Apply the database schema
+python scripts/migrate.py
+
+# (optional) seed demo users — Alice, Bob, Carol
+python scripts/seed.py
+```
+
+### Run
+
+```bash
+# Metro bundler
 npm start
 
-# 4. Run
-npm run android   # Android emulator/device
-npm run ios       # iOS simulator
+# iOS
+npm run ios
+
+# Android
+npm run android
 ```
 
-</details>
+There's also a guided bootstrap script for a fresh machine:
 
-<details>
-<summary><b>🗄️ Supabase Setup</b></summary>
-<br/>
+```powershell
+./scripts/setup.ps1 -All
+```
+
+### Quality checks
 
 ```bash
-# Requires: Python 3.10+ and supabase-py
-# Run all migrations in order:
-python scripts/migrate.py --url <SUPABASE_URL> --key <SERVICE_KEY>
-
-# Or manually execute in SQL Editor:
-#   1. supabase-schema.sql
-#   2. supabase-e2ee-migration.sql
-#   3. supabase-pulse-migration.sql
-
-# Configure environment:
-cp .env.example .env   # Add SUPABASE_URL and SUPABASE_ANON_KEY
-
-# Enable Google Sign-In in Supabase Auth settings
-```
-
-</details>
-
-<details>
-<summary><b>🎲 Seed Demo Data</b></summary>
-<br/>
-
-```bash
-python scripts/seed.py --url <SUPABASE_URL> --key <SERVICE_KEY>
-# Creates: Alice, Bob, Carol + contacts + sample pulses
-# Login: <email>@demo.com / password123
-```
-
-</details>
-
-<details>
-<summary><b>📦 Project Structure</b></summary>
-<br/>
-
-```
-nimbusx/
-├── docs/
-│   ├── architecture/          # System design docs
-│   ├── api/                   # API reference
-│   └── screenshots/           # App screenshots
-├── scripts/
-│   ├── setup.ps1              # Guided bootstrap
-│   ├── seed.py                # Demo data seeder
-│   └── migrate.py             # SQL migration runner
-├── .github/
-│   ├── workflows/             # CI pipeline
-│   ├── ISSUE_TEMPLATE/        # Bug + feature templates
-│   └── PULL_REQUEST_TEMPLATE.md
-└── src/
-    ├── assets/                # Static assets
-    ├── components/            # Reusable UI
-    │   ├── chat/              #   Chat components
-    │   └── common/            #   Shared components
-    ├── config/                # Supabase client
-    ├── constants/             # DB collections, paths
-    ├── hooks/                 # Custom hooks
-    ├── navigation/            # Navigators
-    ├── screens/               # Screens
-    ├── services/              # DB, storage, cache
-    ├── store/                 # Redux slices
-    ├── theme/                 # Design system
-    ├── types/                 # TypeScript interfaces
-    └── utils/                 # Crypto, formatters
-```
-
-</details>
-
-<br/>
-
----
-
-<a name="architecture"></a>
-
-## ✦ Architecture
-
-<br/>
-
-### Encryption Flow
-
-```
-┌──────────┐         ┌──────────┐         ┌──────────┐
-│  Alice   │         │ Supabase │         │   Bob    │
-│  Device  │         │  Server  │         │  Device  │
-└────┬─────┘         └────┬─────┘         └────┬─────┘
-     │                    │                    │
-     │  Generate keypair  │                    │
-     │  on login          │                    │
-     │───────────────────│                     │
-     │                    │                    │
-     │  Store public key  │                    │
-     │───────────────────>│                    │
-     │                    │                    │
-     │  Fetch Bob's key   │                    │
-     │───────────────────>│                    │
-     │<───────────────────│                    │
-     │                    │                    │
-     │  ECDH shared sec   │                    │
-     │  ────────────────  │                    │
-     │                    │                    │
-     │  Encrypt msg       │                    │
-     │                    │                    │
-     │───────────────────>│  Store ciphertext  │
-     │                    │───────────────────>│
-     │                    │                    │
-     │                    │                    │  ECDH shared sec
-     │                    │                    │  ────────────────
-     │                    │                    │
-     │                    │                    │  Decrypt msg
-     │                    │                    │
-```
-
-### Pulse Privacy
-
-```
-                    ┌──────────────────┐
-                    │   Alice sends    │
-                    │   a Pulse        │
-                    └────────┬─────────┘
-                             │
-              ┌──────────────┼──────────────┐
-              │              │              │
-              ▼              ▼              ▼
-        ┌──────────┐   ┌──────────┐   ┌──────────┐
-        │   Bob    │   │  Carol   │   │  Dave    │
-        │   ✅     │   │   ✅     │   │   ❌     │
-        │  sees it │   │  sees it │   │ no access│
-        └──────────┘   └──────────┘   └──────────┘
-
-Alice explicitly chose Bob and Carol as recipients.
-Dave never knows the Pulse existed.
-```
-
-### Data Flow: Sending a Message
-
-```
-Tap Send
-  │
-  ▼
-ChatInput
-  │
-  ▼
-firestoreService.sendMessage()
-  │
-  ├── Is 1-to-1 chat? ── Yes ──► Fetch recipient's public key
-  │                                   │
-  │                                   ▼
-  │                            ECDH shared secret
-  │                                   │
-  │                                   ▼
-  │                            Encrypt plaintext
-  │                                   │
-  └── No ─────────────────────────────┘
-                      │
-                      ▼
-              INSERT into messages table
-                      │
-                      ▼
-              Realtime event ──────────► Recipient decrypts
-                                                │
-                                                ▼
-                                        Redux store updated
-                                                │
-                                                ▼
-                                        MessageBubble renders
+npm run lint      # ESLint
+npx tsc --noEmit  # Type check
+npm test          # Jest
 ```
 
 <br/>
 
----
+## 📁 Project Structure
 
-<a name="security"></a>
-
-## ✦ Security
-
-<br/>
-
-NimbusX was designed with privacy as the default, not an afterthought.
-
-<table>
-  <tr>
-    <td align="center" width="33%">
-      <br/>
-      <img src="https://img.shields.io/badge/Curve25519-00E5FF?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMwMEU1RkYiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9ImNlbnRyYWwiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiMwQjExMjAiIGZvbnQtc2l6ZT0iMTAiIGZvbnQtd2VpZ2h0PSJib2xkIj5FQ0RIPC90ZXh0Pjwvc3ZnPg==&logoColor=black">
-      <br/>
-      <b>Key Exchange</b>
-      <br/>
-      <sub>Curve25519 elliptic-curve Diffie-Hellman.<br/>Keys generated on-device via tweetnacl.<br/>Private key never leaves AsyncStorage.</sub>
-      <br/><br/>
-    </td>
-    <td align="center" width="33%">
-      <br/>
-      <img src="https://img.shields.io/badge/XSalsa20-00E5FF?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMwMEU1RkYiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9ImNlbnRyYWwiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiMwQjExMjAiIGZvbnQtc2l6ZT0iOSIgZm9udC13ZWlnaHQ9ImJvbGQiPigpfFwvPC90ZXh0Pjwvc3ZnPg==&logoColor=black">
-      <br/>
-      <b>Symmetric Cipher</b>
-      <br/>
-      <sub>XSalsa20 stream cipher + Poly1305 MAC.<br/>Authenticated encryption (sealed boxes).<br/>Same algorithm used by WhatsApp.</sub>
-      <br/><br/>
-    </td>
-    <td align="center" width="33%">
-      <br/>
-      <img src="https://img.shields.io/badge/RLS-00E5FF?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMwMEU1RkYiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9ImNlbnRyYWwiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiMwQjExMjAiIGZvbnQtc2l6ZT0iOSIgZm9udC13ZWlnaHQ9ImJvbGQiPlJMUzwvdGV4dD48L3N2Zz4=&logoColor=black">
-      <br/>
-      <b>Row Level Security</b>
-      <br/>
-      <sub>Database-enforced access control.<br/>Users can only read their own chats,<br/>messages, and explicitly-shared Pulses.</sub>
-      <br/><br/>
-    </td>
-  </tr>
-</table>
+```
+NimbusX-Mobile/
+├── src/
+│   ├── screens/          # auth · chats · groups · settings · status
+│   ├── components/       # chat/ and common/ UI building blocks
+│   ├── navigation/        # stack & tab navigators + typed params
+│   ├── store/             # Redux slices (auth, chat, message, group, settings, user)
+│   ├── services/          # Supabase database.ts, storage.ts, caching, notifications
+│   ├── hooks/             # useAuth, useChats, useMessages, usePresence, useAppState
+│   ├── utils/              # crypto.ts, dateUtils, formatters, validation
+│   ├── theme/              # colors, spacing, typography
+│   └── types/               # User, Message, Chat, Group, Status
+├── supabase-schema.sql            # Core schema + RLS
+├── supabase-e2ee-migration.sql    # Public keys, key exchange, encrypted flag
+├── supabase-pulse-migration.sql   # Pulse sharing (shared_with + RLS)
+├── scripts/                        # migrate.py · seed.py · setup.ps1
+├── docs/                           # architecture, API reference, assets
+└── .github/workflows/               # ci.yml · lint.yml
+```
 
 <br/>
 
-**Key security properties:**
+## 🗄️ Database Schema
 
-- **🔑 Key generation** — Curve25519 keypairs created via `cryptoService.getOrCreateKeyPair()` on first login
-- **💾 Key storage** — Private key persisted in `AsyncStorage` (`nimbusx_private_key:{uid}`), never transmitted over the network
-- **🔐 Message encryption** — Each 1-to-1 message encrypted with an ECDH-derived shared secret before INSERT
-- **🔄 Decryption** — Recipient computes the same shared secret and decrypts on receipt
-- **🆔 Safety codes** — FNV-1a hash of concatenated public keys produces a 25-digit numeric code for out-of-band verification
-- **🚪 State isolation** — `rootReducer` clears all Redux slices on `auth/logout` to prevent cross-account leakage
-- **🛡️ Database RLS** — Supabase Row Level Security enforces data isolation at the query level; Pulse `shared_with` array restricts visibility to explicitly chosen recipients
+<div align="center">
 
-<br/>
+```mermaid
+erDiagram
+    PROFILES ||--o{ CHATS : creates
+    PROFILES ||--o{ MESSAGES : sends
+    PROFILES ||--o{ CONTACTS : owns
+    PROFILES ||--o{ STATUSES : posts
+    CHATS ||--o{ MESSAGES : contains
+    MESSAGES ||--o| MESSAGES : replies_to
 
----
+    PROFILES {
+        uuid id PK
+        text email
+        text display_name
+        text public_key
+        bool is_online
+    }
+    CHATS {
+        uuid id PK
+        text type
+        uuid[] members
+        jsonb unread_count
+        jsonb typing
+    }
+    MESSAGES {
+        uuid id PK
+        uuid chat_id FK
+        uuid sender_id FK
+        text status
+        bool encrypted
+        uuid reply_to FK
+    }
+    CONTACTS {
+        uuid user_id FK
+        uuid contact_id FK
+    }
+    STATUSES {
+        uuid id PK
+        uuid uid FK
+        uuid[] shared_with
+        timestamptz expires_at
+    }
+```
 
-## ✦ Contributing
+</div>
 
-<br/>
-
-<p align="center">
-  <a href=".github/ISSUE_TEMPLATE/bug_report.md">
-    <img src="https://img.shields.io/badge/Report_Bug-EF4444?style=for-the-badge&logo=bugcrowd&logoColor=white">
-  </a>
-  <a href=".github/ISSUE_TEMPLATE/feature_request.md">
-    <img src="https://img.shields.io/badge/Request_Feature-8B5CF6?style=for-the-badge&logo=featurebase&logoColor=white">
-  </a>
-  <a href=".github/PULL_REQUEST_TEMPLATE.md">
-    <img src="https://img.shields.io/badge/Open_PR-00E5FF?style=for-the-badge&logo=github&logoColor=black">
-  </a>
-</p>
-
-<br/>
-
-1. **Find or create an issue** — use the templates above
-2. **Fork + branch** — `git checkout -b feat/my-change`
-3. **Code** — follow existing patterns, keep it clean
-4. **Verify** — `npm run lint && npx tsc --noEmit`
-5. **PR** — open a pull request using the [template](.github/PULL_REQUEST_TEMPLATE.md)
-
-All PRs must pass CI (ESLint + TypeScript checks) before review.
-
-<br/>
-
----
-
-## ✦ License
-
-<br/>
-
-<p align="center">
-  <a href="LICENSE">
-    <img src="https://img.shields.io/badge/Open_Source-MIT-06B6D4?style=for-the-badge&logo=open-source-initiative&logoColor=white">
-  </a>
-</p>
-
-<p align="center">
-  <sub>Built with ❤️ using React Native, Supabase, and tweetnacl</sub><br/>
-  <sub>© 2026 NimbusX Labs · MIT Licensed</sub>
-</p>
+Every table ships with Row Level Security — chat access is scoped to `auth.uid() = ANY(members)`, messages are gated by an `is_chat_member()` helper, and Pulse visibility checks both authorship and the `shared_with` array with a 24-hour TTL.
 
 <br/>
 
-<p align="center">
-  <a href="https://github.com/NimbusX-labs/NimbusX-Mobile/stargazers">
-    <img src="https://img.shields.io/github/stars/NimbusX-labs/NimbusX-Mobile?style=social">
-  </a>
-  &nbsp;
-  <a href="https://github.com/NimbusX-labs/NimbusX-Mobile/forks">
-    <img src="https://img.shields.io/github/forks/NimbusX-labs/NimbusX-Mobile?style=social">
-  </a>
-  &nbsp;
-  <a href="https://github.com/NimbusX-labs/NimbusX-Mobile/issues">
-    <img src="https://img.shields.io/github/issues/NimbusX-labs/NimbusX-Mobile?style=social">
-  </a>
-</p>
+## 🗺️ Roadmap
+
+- [x] Core messaging, groups & realtime sync
+- [x] Client-side end-to-end encryption
+- [x] Pulse (24h ephemeral stories)
+- [x] Theming system (6 themes, 3 accents)
+- [ ] Voice & video calling
+- [ ] Multi-device E2EE key sync
+- [ ] Message search
+- [ ] Desktop companion app
+
+<br/>
+
+## 🤝 Contributing
+
+Contributions are welcome. Please open an issue before starting significant work.
+
+1. Fork the repo and create a branch: `git checkout -b feature/your-feature`
+2. Follow the existing lint/format rules — `npm run lint` must pass
+3. Add or update tests where relevant
+4. Open a PR using the provided template
+
+See `.github/ISSUE_TEMPLATE` for bug report and feature request formats.
+
+<br/>
+
+## 📄 License
+
+Distributed under the MIT License.
+
+<br/>
+
+<div align="center">
+<img src="./docs/assets/footer-wave.svg" width="100%" alt="footer"/>
+
+<sub>Made with 💙 by the NimbusX team</sub>
+
+</div>
