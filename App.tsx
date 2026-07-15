@@ -2,7 +2,7 @@ import 'react-native-url-polyfill/auto';
 import React, { useEffect, useState } from 'react';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
-import { StatusBar, LogBox, View, ActivityIndicator } from 'react-native';
+import { LogBox, View, ActivityIndicator, StyleSheet } from 'react-native';
 import { store, persistor } from '@store/index';
 import AppNavigator from '@navigation/AppNavigator';
 import ErrorBoundary from '@components/common/ErrorBoundary';
@@ -15,7 +15,7 @@ LogBox.ignoreLogs([
 ]);
 
 const LoadingFallback = () => (
-  <View style={{ flex: 1, backgroundColor: '#15202B', justifyContent: 'center', alignItems: 'center' }}>
+  <View style={styles.fallbackContainer}>
     <ActivityIndicator color="#1DA1F2" size="large" />
   </View>
 );
@@ -57,5 +57,14 @@ const App = () => {
     </Provider>
   );
 };
+
+const styles = StyleSheet.create({
+  fallbackContainer: {
+    flex: 1,
+    backgroundColor: '#15202B',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
 
 export default App;
