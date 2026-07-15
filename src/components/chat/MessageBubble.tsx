@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Linking } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { Message } from '@types';
 import { useThemeColors, createThemedStyles } from '@theme/colors';
@@ -104,10 +104,10 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMine, onLongPr
 
           <View style={styles.stickerFooter}>
             {message.isPinned && (
-              <Icon name="pin" size={10} color={colors.textTertiary} style={{ marginRight: 2 }} />
+              <Icon name="pin" size={10} color={colors.textTertiary} style={styles.marginRight2} />
             )}
             {message.isEdited && (
-              <Text style={[styles.stickerTime, { fontStyle: 'italic', marginRight: 2 }]}>
+              <Text style={[styles.stickerTime, styles.italicMarginRight2]}>
                 edited
               </Text>
             )}
@@ -121,6 +121,19 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMine, onLongPr
         </TouchableOpacity>
       </View>
     );
+  }
+
+  // Parse status reply: text starting with "Status:" and containing a newline
+  let statusText = '';
+  let replyText = '';
+  let isStatusReply = false;
+  if (message.text && message.text.startsWith('Status:')) {
+    const parts = message.text.split('\n');
+    if (parts.length > 1) {
+      statusText = parts[0];
+      replyText = parts.slice(1).join('\n');
+      isStatusReply = true;
+    }
   }
 
   return (
@@ -147,6 +160,21 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMine, onLongPr
           <View style={[styles.replyContainer, isMine ? styles.replyMine : styles.replyOther]}>
             <Text style={[styles.replyText, isMine && styles.replyTextMine]} numberOfLines={1}>
               Replying to a message…
+            </Text>
+          </View>
+        )}
+
+        {/* Status reply preview */}
+        {isStatusReply && (
+          <View style={[styles.statusReplyContainer, isMine ? styles.statusReplyMine : styles.statusReplyOther]}>
+            <View style={styles.statusReplyHeaderRow}>
+              <Icon name="pulse-outline" size={13} color={isMine ? '#080E1A' : '#00E5FF'} />
+              <Text style={[styles.statusReplyHeader, isMine && styles.statusReplyHeaderMine]}>
+                Status Update
+              </Text>
+            </View>
+            <Text style={[styles.statusReplyText, isMine && styles.statusReplyTextMine]} numberOfLines={2}>
+              {statusText.substring(7).trim()}
             </Text>
           </View>
         )}
@@ -185,7 +213,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMine, onLongPr
               onPress={openUrl} 
               activeOpacity={0.7}
             >
-              <Icon name="play" size={16} color={isMine ? '#00E5FF' : '#080E1A'} style={{ marginLeft: 2 }} />
+              <Icon name="play" size={16} color={isMine ? '#00E5FF' : '#080E1A'} style={styles.marginLeft2} />
             </TouchableOpacity>
 
             <View style={styles.waveformContainer}>
@@ -234,9 +262,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMine, onLongPr
         )}
 
         {/* Text body */}
-        {!!message.text && (
+        {!!(isStatusReply ? replyText : message.text) && (
           <Text style={[styles.text, isMine ? styles.mineText : styles.otherText]}>
-            {message.text}
+            {isStatusReply ? replyText : message.text}
           </Text>
         )}
 
@@ -247,11 +275,11 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMine, onLongPr
               name="pin" 
               size={10} 
               color={isMine ? 'rgba(8,14,26,0.5)' : colors.textTertiary} 
-              style={{ marginRight: 2 }} 
+              style={styles.marginRight2} 
             />
           )}
           {message.isEdited && (
-            <Text style={[styles.time, isMine ? styles.mineTime : styles.otherTime, { fontStyle: 'italic', marginRight: 2 }]}>
+            <Text style={[styles.time, isMine ? styles.mineTime : styles.otherTime, styles.italicMarginRight2]}>
               edited
             </Text>
           )}
@@ -486,6 +514,54 @@ const styles = createThemedStyles((colors) => ({
   },
   replyTextMine: {
     color: 'rgba(8,14,26,0.7)',
+  },
+  statusReplyContainer: {
+    borderLeftWidth: 3,
+    paddingHorizontal: spacing.s,
+    paddingVertical: spacing.xs,
+    borderRadius: 4,
+    marginBottom: spacing.xs,
+    width: '100%',
+  },
+  statusReplyMine: {
+    borderLeftColor: '#080E1A',
+    backgroundColor: 'rgba(8, 14, 26, 0.08)',
+  },
+  statusReplyOther: {
+    borderLeftColor: '#00E5FF',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  statusReplyHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
+  },
+  statusReplyHeader: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#00E5FF',
+    letterSpacing: 0.5,
+  },
+  statusReplyHeaderMine: {
+    color: '#080E1A',
+  },
+  statusReplyText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  statusReplyTextMine: {
+    color: 'rgba(8, 14, 26, 0.7)',
+  },
+  marginRight2: {
+    marginRight: 2,
+  },
+  italicMarginRight2: {
+    fontStyle: 'italic',
+    marginRight: 2,
+  },
+  marginLeft2: {
+    marginLeft: 2,
   },
 }));
 

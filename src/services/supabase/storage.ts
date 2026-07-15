@@ -31,6 +31,7 @@ const resolveUriToLocalPath = async (uri: string, mimeType: string): Promise<{ l
 
 const sanitizeFileName = (fileName: string) => {
   const trimmed = fileName.trim() || `upload_${Date.now()}.bin`;
+  // eslint-disable-next-line no-control-regex
   return trimmed.replace(/[\\/:*?"<>|\x00-\x1F]/g, '_');
 };
 
