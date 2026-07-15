@@ -1,97 +1,103 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# NimbusX
 
-# Getting Started
+**End-to-end encrypted messenger built on React Native + Supabase.**
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+Private, real-time messaging with E2EE, direct Pulse broadcasting, and zero metadata collection.
 
-## Step 1: Start Metro
+## Features
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+- **E2EE Messaging** — Curve25519 ECDH + XSalsa20-Poly1305 via tweetnacl. Messages encrypted before they leave your device.
+- **Pulse** — Not status updates. Private messages you share directly with chosen contacts, shown in a dedicated feed. No one sees your Pulse unless you send it to them.
+- **Groups** — Group chats with member management, admin controls, and E2EE.
+- **Media sharing** — Images, GIFs, stickers, files, voice. Encrypted in transit and at rest.
+- **Privacy controls** — Profile photo visibility, last seen, read receipts, online status, blocked users. Every toggle works.
+- **Security** — App lock (PIN), safety codes, security notifications, simulated 2FA.
+- **Theme system** — Dark, Light, System with accent color variants (teal, emerald, slate).
+- **Storage** — Cloud (Supabase) or local-only mode.
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+## Tech Stack
 
-```sh
-# Using npm
+| Layer | What |
+|-------|------|
+| Framework | React Native 0.84 + React 19 |
+| State | Redux Toolkit + redux-persist |
+| Backend | Supabase (PostgreSQL, Auth, Realtime, Storage) |
+| Encryption | tweetnacl (Curve25519 + XSalsa20-Poly1305) |
+| Navigation | React Navigation 7 (Stack + Bottom Tabs) |
+| Auth | Supabase Auth + Google Sign-In |
+
+## Getting Started
+
+```bash
+# 1. Install deps
+npm install
+
+# 2. Start Metro bundler
 npm start
 
-# OR using Yarn
-yarn start
+# 3. Run on device/emulator
+npm run android   # Android
+npm run ios       # iOS
 ```
 
-## Step 2: Build and run your app
+## Supabase Setup
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+1. Create a Supabase project at https://supabase.com
+2. Run `supabase-schema.sql` in the SQL Editor
+3. Run `supabase-e2ee-migration.sql` for E2EE support
+4. Run `supabase-pulse-migration.sql` for Pulse features
+5. Copy `.env.example` → `.env` and add your Supabase URL + anon key
+6. Enable Google Sign-In in Supabase Auth settings
 
-### Android
+## Project Structure
 
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
+```
+src/
+├── assets/            # Images, fonts, static assets
+├── components/        # Reusable UI components
+│   ├── chat/          # Chat-related (MessageBubble, ChatInput, etc.)
+│   └── common/        # Shared (Avatar, Badge, EmptyState, etc.)
+├── config/            # Supabase client, app config
+├── constants/         # Collection names, storage paths, pagination
+├── hooks/             # Custom React hooks (useAuth, useChats, etc.)
+├── navigation/        # Stack, tab, and auth navigators
+├── screens/           # Screen components (auth, chats, groups, settings, status)
+├── services/          # API layer (Supabase database, storage, cache)
+├── store/             # Redux slices + store config
+├── theme/             # Colors, spacing, typography, theming system
+├── types/             # TypeScript interfaces
+└── utils/             # Crypto, date utils, formatters, validation
 ```
 
-### iOS
+## Architecture Notes
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+### Encryption Flow
+1. Keypair generated on login via `cryptoService.getOrCreateKeyPair()`
+2. Public key stored in `profiles.public_key` (Supabase)
+3. Private key persists in AsyncStorage (`nimbusx_private_key:{uid}`)
+4. Outgoing messages: fetch recipient's public key → ECDH shared secret → encrypt
+5. Incoming messages: compute same shared secret → decrypt
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+### Pulse Privacy
+- Each Pulse stores a `shared_with` UUID array
+- RLS policy: `auth.uid() = uid OR auth.uid() = ANY(shared_with)`
+- No global broadcast — you explicitly pick recipients
 
-```sh
-bundle install
-```
+### State Management
+- Redux persist whitelist: `auth`, `user`, `messages`, `settings`
+- On logout, all user data cleared from store to prevent cross-account leakage
 
-Then, and every time you update your native dependencies, run:
+## Scripts
 
-```sh
-bundle exec pod install
-```
+| Script | Purpose |
+|--------|---------|
+| `npm start` | Start Metro bundler |
+| `npm run android` | Build + run on Android |
+| `npm run ios` | Build + run on iOS |
+| `npm run lint` | Run ESLint across src/ |
+| `npm test` | Run Jest tests |
+| `npx tsc --noEmit` | TypeScript type check |
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+## License
 
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+MIT
