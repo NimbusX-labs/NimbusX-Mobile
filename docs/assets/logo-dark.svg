@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" fill="none">
+  <rect width="800" height="200" rx="12" fill="#0B1120"/>
+  <!-- Glow -->
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00E5FF" stop-opacity="0.15"/>
+      <stop offset="50%" stop-color="#00E5FF" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#00E5FF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00E5FF" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#00E5FF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="800" height="4" fill="url(#g2)"/>
+  <rect x="0" y="0" width="400" height="2" fill="url(#g)"/>
+  <!-- N -->
+  <text x="48" y="136" font-family="'JetBrains Mono', 'Fira Code', monospace" font-size="120" font-weight="800" fill="#00E5FF" letter-spacing="8">N</text>
+  <!-- imbusX -->
+  <text x="160" y="136" font-family="'JetBrains Mono', 'Fira Code', monospace" font-size="120" font-weight="200" fill="#F9FAFB" letter-spacing="2">imbus</text>
+  <text x="544" y="136" font-family="'JetBrains Mono', 'Fira Code', monospace" font-size="120" font-weight="800" fill="#00E5FF" letter-spacing="2">X</text>
+  <!-- Tagline -->
+  <text x="48" y="170" font-family="system-ui, sans-serif" font-size="14" fill="#6B7280" letter-spacing="6" font-weight="500">END-TO-END ENCRYPTED MESSENGER</text>
+  <!-- Decorative dot -->
+  <circle cx="740" cy="60" r="3" fill="#00E5FF" opacity="0.5"/>
+  <circle cx="740" cy="72" r="2" fill="#00E5FF" opacity="0.3"/>
+</svg>
