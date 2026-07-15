@@ -1,0 +1,21 @@
+<svg width="1280" height="120" viewBox="0 0 1280 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0ea5e9"/>
+      <stop offset="50%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="120" fill="#050810"/>
+  <path fill="url(#waveGrad)" opacity="0.85">
+    <animate attributeName="d" dur="6s" repeatCount="indefinite"
+      values="
+      M0,60 C 200,100 400,20 640,60 C 880,100 1080,20 1280,60 L1280,120 L0,120 Z;
+      M0,60 C 200,20 400,100 640,60 C 880,20 1080,100 1280,60 L1280,120 L0,120 Z;
+      M0,60 C 200,100 400,20 640,60 C 880,100 1080,20 1280,60 L1280,120 L0,120 Z"/>
+  </path>
+  <text x="640" y="70" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif"
+    font-size="16" fill="#e2e8f0" letter-spacing="2" opacity="0.9">
+    Built with React Native &amp; Supabase
+  </text>
+</svg>
