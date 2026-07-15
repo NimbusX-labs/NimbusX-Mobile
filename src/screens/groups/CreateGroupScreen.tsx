@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  StyleSheet,
   TouchableOpacity,
   SafeAreaView,
   ActivityIndicator,
@@ -55,7 +54,7 @@ const CreateGroupScreen = () => {
         borderBottomColor: '#1F2937',
       },
     });
-  }, [navigation]);
+  }, [navigation, colors.textPrimary, colors.primaryBackground]);
 
   // Load contacts from Firestore
   useEffect(() => {
@@ -292,7 +291,7 @@ const CreateGroupScreen = () => {
           ) : (
             <>
               <Text style={styles.createText}>CREATE GROUP</Text>
-              <Icon name="checkmark" size={18} color="#080E1A" style={{ marginLeft: 6 }} />
+              <Icon name="checkmark" size={18} color="#080E1A" style={styles.marginLeft6} />
             </>
           )}
         </TouchableOpacity>
@@ -550,6 +549,9 @@ const styles = createThemedStyles((colors) => ({
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 0.5,
+  },
+  marginLeft6: {
+    marginLeft: 6,
   },
 }));
 

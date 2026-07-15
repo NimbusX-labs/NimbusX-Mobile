@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   FlatList,
-  StyleSheet,
   TouchableOpacity,
   SafeAreaView,
   ActivityIndicator,
@@ -222,7 +221,7 @@ const NewChatScreen = () => {
       </View>
       <Icon name="chevron-forward" size={20} color={colors.divider} />
     </TouchableOpacity>
-  ), [startChat]);
+  ), [startChat, colors.divider]);
 
   return (
     <SafeAreaView style={styles.container}>

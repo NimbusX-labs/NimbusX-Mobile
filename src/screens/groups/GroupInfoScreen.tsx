@@ -2,7 +2,6 @@ import React, { useState, useEffect, useLayoutEffect, useCallback } from 'react'
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
@@ -214,9 +213,10 @@ const GroupInfoScreen = () => {
         borderBottomWidth: 1,
         borderBottomColor: '#1F2937',
       },
+      // eslint-disable-next-line react/no-unstable-nested-components
       headerRight: () => (
         <TouchableOpacity 
-          style={{ marginRight: spacing.m, padding: spacing.xs }}
+          style={styles.headerRightBtn}
           onPress={() => {
             Alert.alert('Group Options', undefined, [
               { text: 'Cancel', style: 'cancel' },
@@ -229,7 +229,7 @@ const GroupInfoScreen = () => {
         </TouchableOpacity>
       ),
     });
-  }, [navigation, isAdmin, handleDelete, handleLeave]);
+  }, [navigation, isAdmin, handleDelete, handleLeave, colors.textPrimary, colors.primaryBackground]);
 
   const getMemberName = (user: User) => {
     const isSelf = user.uid === currentUser?.uid;
@@ -349,15 +349,15 @@ const GroupInfoScreen = () => {
               {/* Stacked File Cards */}
               <View style={styles.leftMediaCol}>
                 <View style={styles.fileCard}>
-                  <Icon name="document-text" size={20} color="#00E5FF" style={{ marginRight: 6 }} />
-                  <View style={{ flex: 1 }}>
+                  <Icon name="document-text" size={20} color="#00E5FF" style={styles.marginRight6} />
+                  <View style={styles.flex1}>
                     <Text style={styles.fileCardName} numberOfLines={1}>Q3_Report.pdf</Text>
                     <Text style={styles.fileCardSize}>2.4 MB</Text>
                   </View>
                 </View>
                 <View style={styles.fileCard}>
-                  <Icon name="folder" size={20} color="#00E5FF" style={{ marginRight: 6 }} />
-                  <View style={{ flex: 1 }}>
+                  <Icon name="folder" size={20} color="#00E5FF" style={styles.marginRight6} />
+                  <View style={styles.flex1}>
                     <Text style={styles.fileCardName} numberOfLines={1}>Assets.zip</Text>
                     <Text style={styles.fileCardSize}>14 MB</Text>
                   </View>
@@ -776,6 +776,16 @@ const styles = createThemedStyles((colors) => ({
   },
   removeBtn: {
     padding: spacing.xs,
+  },
+  headerRightBtn: {
+    marginRight: spacing.m,
+    padding: spacing.xs,
+  },
+  marginRight6: {
+    marginRight: 6,
+  },
+  flex1: {
+    flex: 1,
   },
 }));
 

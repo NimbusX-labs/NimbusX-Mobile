@@ -211,7 +211,7 @@ const ChatScreen = () => {
       onPress: () => { setMenuVisible(false); handleDeleteChat(); },
       color: colors.error,
     },
-  ], [handleViewContact, handleSearch, handleSelectMessages, handleDisappearingMessages, handleAddToFavourites, handleCloseChat, handleClearChat, handleDeleteChat]);
+  ], [handleViewContact, handleSearch, handleSelectMessages, handleDisappearingMessages, handleAddToFavourites, handleCloseChat, handleClearChat, handleDeleteChat, colors.error]);
 
   // High-performance selector
   const allMessages = useAppSelector(messagesSelectors.selectAll);
@@ -230,6 +230,7 @@ const ChatScreen = () => {
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
+      // eslint-disable-next-line react/no-unstable-nested-components
       headerTitle: () => (
         <TouchableOpacity 
           style={styles.headerContainer} 
@@ -253,6 +254,7 @@ const ChatScreen = () => {
           </View>
         </TouchableOpacity>
       ),
+      // eslint-disable-next-line react/no-unstable-nested-components
       headerRight: () => (
         <TouchableOpacity 
           onPress={() => setMenuVisible(true)} 
@@ -262,7 +264,7 @@ const ChatScreen = () => {
         </TouchableOpacity>
       ),
     });
-  }, [navigation, otherUserName, otherUser?.avatarUrl, route.params.otherUserAvatar, chat?.type, typingUsers, handleViewContact]);
+  }, [navigation, otherUserName, otherUser?.avatarUrl, route.params.otherUserAvatar, chat?.type, typingUsers, handleViewContact, colors.textSecondary]);
 
   // Pinned messages
   const pinnedMessages = messages.filter((m) => m.isPinned);

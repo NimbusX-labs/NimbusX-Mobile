@@ -10,7 +10,6 @@ import {
   Animated,
   Pressable,
   Alert,
-  ActivityIndicator,
   Keyboard,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -68,7 +67,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const colors = useThemeColors();
   const [text, setText] = useState('');
   const [menuVisible, setMenuVisible] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [_uploading, setUploading] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerStartTab, setPickerStartTab] = useState<PickerStartTab>('emoji');
   const inputRef = useRef<TextInput>(null);
