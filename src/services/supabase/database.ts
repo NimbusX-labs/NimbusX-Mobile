@@ -1,5 +1,26 @@
 import { supabase } from '../../config/supabase';
 import { Chat, Message, User, Status } from '@types';
+import { cryptoService } from '../../utils/crypto';
+
+// In-memory cache for other users' public keys: uid -> public_key
+const publicKeyCache: Record<string, string> = {};
+
+async function getOrFetchPublicKey(uid: string): Promise<string | null> {
+  if (publicKeyCache[uid]) {
+    return publicKeyCache[uid];
+  }
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('public_key')
+    .eq('id', uid)
+    .maybeSingle();
+
+  if (!error && data && data.public_key) {
+    publicKeyCache[uid] = data.public_key;
+    return data.public_key;
+  }
+  return null;
+}
 
 // Helper to map DB chat to client Chat type
 const mapChat = (chat: any): Chat => {
@@ -57,7 +78,56 @@ export const firestoreService = {
         .order('last_message_at', { ascending: false });
 
       if (!error && data) {
-        callback(mapChats(data));
+        // Collect all partner user IDs from 1-to-1 chats
+        const otherUserIds = data
+          .filter((chat) => chat.type === 'one-to-one')
+          .map((chat) => chat.members?.find((m: string) => m !== uid))
+          .filter(Boolean) as string[];
+
+        // Batch fetch public keys that are not already cached
+        const missingIds = otherUserIds.filter((id) => !publicKeyCache[id]);
+        if (missingIds.length > 0) {
+          try {
+            const { data: profiles, error: profileError } = await supabase
+              .from('profiles')
+              .select('id, public_key')
+              .in('id', missingIds);
+
+            if (!profileError && profiles) {
+              profiles.forEach((p) => {
+                if (p.public_key) {
+                  publicKeyCache[p.id] = p.public_key;
+                }
+              });
+            }
+          } catch (err) {
+            console.error('listenUserChats: failed to batch fetch public keys:', err);
+          }
+        }
+
+        // Decrypt the last message of each 1-to-1 chat
+        const myPrivateKey = await cryptoService.getPrivateKey(uid);
+        const decryptedChats = await Promise.all(
+          data.map(async (chat) => {
+            if (chat.type === 'one-to-one' && chat.last_message && myPrivateKey) {
+              const otherId = chat.members?.find((m: string) => m !== uid);
+              if (otherId) {
+                const otherPublicKey = publicKeyCache[otherId];
+                if (otherPublicKey) {
+                  const decrypted = cryptoService.decryptMessage(
+                    chat.last_message,
+                    otherPublicKey,
+                    myPrivateKey
+                  );
+                  return { ...chat, last_message: decrypted };
+                }
+              }
+            }
+            return chat;
+          })
+        );
+
+        callback(mapChats(decryptedChats));
       } else if (error) {
         console.error('Fetch user chats failed:', error);
       }
@@ -99,6 +169,39 @@ export const firestoreService = {
         .limit(limit);
 
       if (!error && data) {
+        // Fetch chat details to check if it is a 1-to-1 chat (E2EE target)
+        const { data: chatData } = await supabase
+          .from('chats')
+          .select('type, members')
+          .eq('id', chatId)
+          .maybeSingle();
+
+        if (chatData && chatData.type === 'one-to-one') {
+          const { data: sessionData } = await supabase.auth.getSession();
+          const currentUid = sessionData.session?.user?.id;
+          if (currentUid) {
+            const otherId = chatData.members?.find((m: string) => m !== currentUid);
+            if (otherId) {
+              const otherPublicKey = await getOrFetchPublicKey(otherId);
+              const myPrivateKey = await cryptoService.getPrivateKey(currentUid);
+              if (otherPublicKey && myPrivateKey) {
+                const decryptedData = data.map((msg: any) => {
+                  if (msg.text) {
+                    const decryptedText = cryptoService.decryptMessage(
+                      msg.text,
+                      otherPublicKey,
+                      myPrivateKey
+                    );
+                    return { ...msg, text: decryptedText };
+                  }
+                  return msg;
+                });
+                callback(mapMessages(decryptedData));
+                return;
+              }
+            }
+          }
+        }
         callback(mapMessages(data));
       } else if (error) {
         console.error('Fetch messages failed:', error);
@@ -138,10 +241,30 @@ export const firestoreService = {
     const { chatId } = message;
     if (!chatId) throw new Error('Chat ID is required');
 
+    let textToSend = message.text || '';
+
+    // Check if E2EE is required (1-to-1 chat)
+    const { data: chatData } = await supabase
+      .from('chats')
+      .select('type, members')
+      .eq('id', chatId)
+      .maybeSingle();
+
+    if (chatData && chatData.type === 'one-to-one' && textToSend && message.senderId) {
+      const otherId = chatData.members?.find((m: string) => m !== message.senderId);
+      if (otherId) {
+        const otherPublicKey = await getOrFetchPublicKey(otherId);
+        const myPrivateKey = await cryptoService.getPrivateKey(message.senderId);
+        if (otherPublicKey && myPrivateKey) {
+          textToSend = cryptoService.encryptMessage(textToSend, otherPublicKey, myPrivateKey);
+        }
+      }
+    }
+
     const insertData: any = {
       chat_id: chatId,
       sender_id: message.senderId,
-      text: message.text || '',
+      text: textToSend,
       status: message.status || 'sent',
       media_url: message.mediaUrl,
       media_type: message.mediaType,
@@ -164,7 +287,12 @@ export const firestoreService = {
       console.error('Send message failed:', error);
       throw error;
     }
-    return data;
+
+    // Return the original decrypted message so Redux is updated with plaintext
+    return {
+      ...data,
+      text: message.text || '',
+    };
   },
 
   /**
@@ -288,6 +416,13 @@ export const firestoreService = {
     });
 
     if (!rpcError) {
+      // Save public key if provided
+      if (data.publicKey) {
+        await supabase
+          .from('profiles')
+          .update({ public_key: data.publicKey })
+          .eq('id', profileId);
+      }
       return;
     }
 
@@ -308,6 +443,7 @@ export const firestoreService = {
     if (data.displayName !== undefined) patch.display_name = data.displayName;
     if (data.avatarUrl !== undefined) patch.avatar_url = data.avatarUrl;
     if (data.status !== undefined) patch.status = data.status;
+    if (data.publicKey !== undefined) patch.public_key = data.publicKey;
 
     const { data: updatedRows, error: updateError } = await supabase
       .from('profiles')
@@ -325,6 +461,7 @@ export const firestoreService = {
       display_name: data.displayName ?? '',
       avatar_url: data.avatarUrl ?? '',
       status: data.status ?? 'Hey there! I am using NimbusX',
+      public_key: data.publicKey ?? '',
       updated_at: new Date().toISOString(),
     };
 
@@ -355,6 +492,11 @@ export const firestoreService = {
     }
     if (!data) return null;
 
+    // Cache the public key
+    if (data.public_key) {
+      publicKeyCache[uid] = data.public_key;
+    }
+
     return {
       id: data.id,
       uid: data.id,
@@ -364,6 +506,7 @@ export const firestoreService = {
       status: data.status || '',
       isOnline: data.is_online || false,
       lastSeen: data.last_seen ? new Date(data.last_seen).getTime() : undefined,
+      publicKey: data.public_key || '',
     } as User;
   },
 
@@ -371,27 +514,32 @@ export const firestoreService = {
    * Search users by exact email
    */
   async searchUserByEmail(email: string): Promise<User | null> {
+    // Call the security-definer RPC to bypass restricted read RLS
     const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('email', email.toLowerCase().trim())
-      .maybeSingle();
+      .rpc('search_profile_by_email', { p_email: email.toLowerCase().trim() });
 
     if (error) {
-      console.error('Search user by email failed:', error);
+      console.error('Search user by email failed (rpc):', error);
       return null;
     }
-    if (!data) return null;
+    if (!data || data.length === 0) return null;
+    const profile = data[0];
+
+    // Cache the public key
+    if (profile.public_key) {
+      publicKeyCache[profile.id] = profile.public_key;
+    }
 
     return {
-      id: data.id,
-      uid: data.id,
-      email: data.email,
-      displayName: data.display_name || '',
-      avatarUrl: data.avatar_url || '',
-      status: data.status || '',
-      isOnline: data.is_online || false,
-      lastSeen: data.last_seen ? new Date(data.last_seen).getTime() : undefined,
+      id: profile.id,
+      uid: profile.id,
+      email: profile.email,
+      displayName: profile.display_name || '',
+      avatarUrl: profile.avatar_url || '',
+      status: profile.status || '',
+      isOnline: profile.is_online || false,
+      lastSeen: profile.last_seen ? new Date(profile.last_seen).getTime() : undefined,
+      publicKey: profile.public_key || '',
     } as User;
   },
 
@@ -526,7 +674,7 @@ export const firestoreService = {
   },
 
   /**
-   * Post a new status update
+   * Post a new pulse (private status shared with selected recipients)
    */
   async postStatus(status: Omit<Status, 'id'>): Promise<string> {
     const now = new Date();
@@ -540,6 +688,7 @@ export const firestoreService = {
         avatar_url: status.avatarUrl || '',
         text: status.text || '',
         image_url: status.imageUrl,
+        shared_with: status.sharedWith || [],
         created_at: now.toISOString(),
         expires_at: expiresAt.toISOString(),
       })
@@ -554,15 +703,16 @@ export const firestoreService = {
   },
 
   /**
-   * Listen to all active statuses
+   * Listen to pulses shared with the current user (or created by them)
    */
-  listenStatuses(callback: (statuses: Status[]) => void) {
+  listenStatuses(currentUid: string, callback: (statuses: Status[]) => void) {
     const fetchStatuses = async () => {
       const nowStr = new Date().toISOString();
       const { data, error } = await supabase
         .from('statuses')
         .select('*')
         .gt('expires_at', nowStr)
+        .or(`uid.eq.${currentUid},shared_with.cs.{${currentUid}}`)
         .order('created_at', { ascending: false });
 
       if (!error && data) {
@@ -573,6 +723,7 @@ export const firestoreService = {
           avatarUrl: row.avatar_url || '',
           text: row.text || '',
           imageUrl: row.image_url,
+          sharedWith: row.shared_with || [],
           createdAt: new Date(row.created_at).getTime(),
           expiresAt: new Date(row.expires_at).getTime(),
         })) as Status[];
@@ -585,10 +736,24 @@ export const firestoreService = {
     fetchStatuses();
 
     const channel = supabase
-      .channel('statuses-changes')
+      .channel(`statuses-changes-${currentUid}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'statuses' },
+        () => {
+          fetchStatuses();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'contacts', filter: `user_id=eq.${currentUid}` },
+        () => {
+          fetchStatuses();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'contacts', filter: `contact_id=eq.${currentUid}` },
         () => {
           fetchStatuses();
         }
