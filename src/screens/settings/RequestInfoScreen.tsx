@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
+
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
@@ -142,7 +142,7 @@ const RequestInfoScreen = () => {
           <Icon name="lock-closed-outline" size={18} color={colors.textTertiary} />
           <Text style={styles.notIncludedText}>
             Message content is{' '}
-            <Text style={{ fontWeight: '700', color: colors.textPrimary }}>not included</Text> in reports.
+            <Text style={styles.boldTextPrimary}>not included</Text> in reports.
             NimbusX does not store readable message content on our servers.
           </Text>
         </View>
@@ -185,7 +185,7 @@ const RequestInfoScreen = () => {
               <Text style={[styles.statusText, { color: colors.warning }]}>Report Generating</Text>
             </View>
             <Text style={styles.statusSubtext}>
-              Requested on <Text style={{ fontWeight: '700', color: colors.textPrimary }}>{requestDate}</Text>
+              Requested on <Text style={styles.boldTextPrimary}>{requestDate}</Text>
               .{'\n'}We'll email it to <Text style={styles.emailHighlight}>{user?.email || 'your registered email'}</Text> when it's ready.
             </Text>
           </View>
@@ -200,7 +200,7 @@ const RequestInfoScreen = () => {
             <Text style={styles.statusSubtext}>
               Generated successfully on {requestDate}.{'\n'}
               Available for download until{' '}
-              <Text style={{ fontWeight: '700', color: colors.textPrimary }}>{expiryDate}</Text>.
+              <Text style={styles.boldTextPrimary}>{expiryDate}</Text>.
             </Text>
           </View>
         )}
@@ -251,6 +251,7 @@ const RequestInfoScreen = () => {
 
 const styles = createThemedStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.primaryBackground },
+  boldTextPrimary: { fontWeight: '700', color: colors.textPrimary },
   scrollContent: {
     paddingHorizontal: spacing.l,
     paddingTop: spacing.l,

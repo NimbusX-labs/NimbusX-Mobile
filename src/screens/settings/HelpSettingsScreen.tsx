@@ -2,7 +2,7 @@ import React from 'react';
 import {
   View,
   Text,
-  StyleSheet,
+
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
@@ -40,7 +40,6 @@ const SettingItem = ({ icon, title, subtitle, onPress }: ItemProps) => {
 };
 
 const HelpSettingsScreen = () => {
-  const colors = useThemeColors();
   const navigation = useNavigation<NavigationProp>();
 
   return (

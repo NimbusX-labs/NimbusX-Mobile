@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
+
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
@@ -16,7 +16,6 @@ import { ChatStackParamList } from '@navigation/types';
 import { useAppSelector } from '@store/hooks';
 import { useThemeColors, createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
-import { typography } from '@theme/typography';
 import Avatar from '@components/common/Avatar';
 
 const { width } = Dimensions.get('window');
@@ -25,7 +24,6 @@ type NavigationProp = StackNavigationProp<ChatStackParamList, 'Profile'>;
 
 // ─── Section Label ──────────────────────────────────────────────────────────
 const SectionLabel = ({ label }: { label: string }) => {
-  const colors = useThemeColors();
   return <Text style={styles.sectionLabel}>{label}</Text>;
 };
 
@@ -70,7 +68,6 @@ const MenuRow = React.memo(
 
 // ─── Divider ────────────────────────────────────────────────────────────────
 const RowDivider = () => {
-  const colors = useThemeColors();
   return <View style={styles.menuDivider} />;
 };
 

@@ -71,7 +71,6 @@ const CATEGORIES: { key: FileCategory; label: string; icon: string }[] = [
 // ── File Row Component ──────────────────────────────────────────────────────
 
 const FileRow = React.memo(({ item }: { item: FileItem }) => {
-  const colors = useThemeColors();
   const typeInfo = FILE_TYPE_ICONS[item.type] || FILE_TYPE_ICONS.file;
 
   return (

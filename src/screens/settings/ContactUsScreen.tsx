@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
+
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
@@ -91,7 +91,7 @@ const ContactUsScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={styles.keyboardView} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Direct Email Card */}
           <TouchableOpacity style={styles.emailCard} onPress={handleEmailPress} activeOpacity={0.8}>
@@ -148,7 +148,7 @@ const ContactUsScreen = () => {
             />
 
             <TouchableOpacity
-              style={[styles.submitButton, loading && { opacity: 0.7 }]}
+              style={[styles.submitButton, loading && styles.disabledSubmit]}
               onPress={handleSubmit}
               activeOpacity={0.8}
               disabled={loading}
@@ -183,6 +183,12 @@ const styles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: colors.primaryBackground,
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  disabledSubmit: {
+    opacity: 0.7,
   },
   scrollContent: {
     paddingHorizontal: spacing.l,

@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
+
   TouchableOpacity,
   StatusBar,
 } from 'react-native';

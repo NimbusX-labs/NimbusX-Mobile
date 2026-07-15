@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
+
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
@@ -11,6 +11,7 @@ import {
   Alert,
   Platform,
   ActivityIndicator,
+  StyleSheet,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
@@ -64,7 +65,7 @@ const SettingItem = ({
 const ChatsSettingsScreen = () => {
   const colors = useThemeColors();
   const dispatch = useAppDispatch();
-  const { theme, wallpaper, enterIsSend, mediaVisibility, lastBackupTime, isBackingUp } = useAppSelector(
+  const { theme, wallpaper, enterIsSend, mediaVisibility, lastBackupTime } = useAppSelector(
     (state) => state.settings
   );
   const chatIds = useAppSelector((state) => state.chats.ids);
@@ -127,7 +128,6 @@ const ChatsSettingsScreen = () => {
     ];
 
     let progress = 0;
-    let phaseIdx = 0;
     setBackupPhase(phases[0]);
 
     const interval = setInterval(() => {
@@ -135,16 +135,12 @@ const ChatsSettingsScreen = () => {
       setBackupProgress(progress);
 
       if (progress === 20) {
-        phaseIdx = 1;
         setBackupPhase(phases[1]);
       } else if (progress === 45) {
-        phaseIdx = 2;
         setBackupPhase(phases[2]);
       } else if (progress === 70) {
-        phaseIdx = 3;
         setBackupPhase(phases[3]);
       } else if (progress === 90) {
-        phaseIdx = 4;
         setBackupPhase(phases[4]);
       }
 
@@ -354,11 +350,11 @@ const ChatsSettingsScreen = () => {
               <View style={styles.metaBox}>
                 <Text style={styles.metaRow}>
                   Last Backup:{' '}
-                  <Text style={{ fontWeight: '700', color: colors.textPrimary }}>{formattedLastBackup}</Text>
+                  <Text style={styles.boldTextPrimary}>{formattedLastBackup}</Text>
                 </Text>
                 <Text style={styles.metaRow}>
                   Status:{' '}
-                  <Text style={{ fontWeight: '700', color: colors.success }}>Encrypted & Synchronized</Text>
+                  <Text style={styles.boldSuccess}>Encrypted & Synchronized</Text>
                 </Text>
               </View>
 
@@ -598,6 +594,14 @@ const styles = createThemedStyles((colors) => ({
   metaRow: {
     fontSize: 13,
     color: colors.textSecondary,
+  },
+  boldTextPrimary: {
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  boldSuccess: {
+    fontWeight: '700',
+    color: colors.success,
   },
   primaryButton: {
     backgroundColor: colors.primaryAccent,

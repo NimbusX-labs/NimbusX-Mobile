@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
+
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
@@ -84,7 +84,7 @@ const ChangeNumberScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={styles.keyboardView} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Step Indicator */}
           <View style={styles.stepRow}>
@@ -214,6 +214,7 @@ const ChangeNumberScreen = () => {
 
 const styles = createThemedStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.primaryBackground },
+  keyboardView: { flex: 1 },
   scrollContent: {
     paddingHorizontal: spacing.l,
     paddingTop: spacing.l,

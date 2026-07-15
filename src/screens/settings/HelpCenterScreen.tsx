@@ -2,13 +2,10 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
   LayoutAnimation,
-  Platform,
-  UIManager,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useThemeColors, createThemedStyles } from '@theme/colors';

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
+
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
@@ -10,7 +10,6 @@ import {
   Modal,
   ActivityIndicator,
   Platform,
-  Dimensions,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
@@ -22,7 +21,6 @@ import {
 import { useThemeColors, createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
 
-const { width, height } = Dimensions.get('window');
 
 const DevicesScreen = () => {
   const colors = useThemeColors();
@@ -227,7 +225,7 @@ const DevicesScreen = () => {
 
             <View style={styles.scannerWrapper}>
               <Text style={styles.scannerInstructions}>
-                Open <Text style={{ fontWeight: '700', color: colors.primaryAccent }}>nimbusx.io/web</Text> on
+                Open <Text style={styles.boldTextPrimaryAccent}>nimbusx.io/web</Text> on
                 your computer. Scan the QR code presented on your screen.
               </Text>
 
@@ -266,6 +264,7 @@ const DevicesScreen = () => {
 
 const styles = createThemedStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.primaryBackground },
+  boldTextPrimaryAccent: { fontWeight: '700', color: colors.primaryAccent },
   scrollContent: {
     paddingHorizontal: spacing.l,
     paddingTop: spacing.l,

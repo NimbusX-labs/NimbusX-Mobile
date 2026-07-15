@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, View, Image, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, Platform } from 'react-native';
+import { Modal, View, Image, TouchableOpacity, SafeAreaView, StatusBar, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useThemeColors, createThemedStyles } from '@theme/colors';
 
@@ -31,7 +31,7 @@ const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({ visible, imageUri
   );
 };
 
-const styles = createThemedStyles((colors) => ({
+const styles = createThemedStyles((_colors) => ({
   container: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.95)',

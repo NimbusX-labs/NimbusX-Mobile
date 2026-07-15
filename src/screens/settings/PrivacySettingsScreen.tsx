@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
+
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
@@ -27,10 +27,9 @@ import {
 } from '@store/slices/settingsSlice';
 import { useThemeColors, createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
-import { typography } from '@theme/typography';
 import Avatar from '@components/common/Avatar';
 
-const { width, height } = Dimensions.get('window');
+const { height } = Dimensions.get('window');
 
 const VisibilityPicker = ({
   value,
@@ -76,7 +75,7 @@ const SwitchRow = ({
     <View style={styles.switchRow}>
       <View style={styles.switchRowLeft}>
         <Icon name={icon} size={20} color={colors.textSecondary} style={styles.rowIcon} />
-        <View style={{ flex: 1 }}>
+        <View style={styles.flex1}>
           <Text style={styles.rowTitle}>{title}</Text>
           {subtitle ? <Text style={styles.rowSubtitle}>{subtitle}</Text> : null}
         </View>
@@ -196,7 +195,7 @@ const PrivacySettingsScreen = () => {
             onPress={() => setModalVisible(true)}
           >
             <Icon name="ban-outline" size={20} color={colors.error} style={styles.rowIcon} />
-            <View style={{ flex: 1 }}>
+            <View style={styles.flex1}>
               <Text style={[styles.rowTitle, { color: colors.error }]}>Blocked Users</Text>
               <Text style={styles.rowSubtitle}>
                 {blockedUsers.length} {blockedUsers.length === 1 ? 'contact' : 'contacts'} blocked
@@ -300,6 +299,7 @@ const PrivacySettingsScreen = () => {
 
 const styles = createThemedStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.primaryBackground },
+  flex1: { flex: 1 },
   scrollContent: {
     paddingHorizontal: spacing.l,
     paddingTop: spacing.l,

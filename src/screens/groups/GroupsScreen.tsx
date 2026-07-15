@@ -2,7 +2,6 @@ import React, { useCallback, useMemo } from 'react';
 import {
   FlatList,
   SafeAreaView,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,

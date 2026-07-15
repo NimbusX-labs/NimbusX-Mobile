@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, Animated, DimensionValue } from 'react-native';
-import { useThemeColors, createThemedStyles } from '@theme/colors';
+import { Animated, DimensionValue } from 'react-native';
+import { createThemedStyles } from '@theme/colors';
 
 interface LoadingSkeletonProps {
   width?: DimensionValue;
@@ -15,7 +15,7 @@ const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
   borderRadius = 4,
   style 
 }) => {
-  const colors = useThemeColors();
+
   const animatedValue = React.useRef(new Animated.Value(0)).current;
 
   useEffect(() => {

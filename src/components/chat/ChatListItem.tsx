@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Chat, User } from '@types';
 import { firestoreService } from '@services/supabase/database';
-import { useThemeColors, createThemedStyles } from '@theme/colors';
+import { createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
 import { typography } from '@theme/typography';
 import Avatar from '@components/common/Avatar';
@@ -17,7 +17,6 @@ interface ChatListItemProps {
 }
 
 const ChatListItem: React.FC<ChatListItemProps> = ({ chat, onPress, currentUserId }) => {
-  const colors = useThemeColors();
   const dispatch = useAppDispatch();
   const unreadCount = chat.unreadCount?.[currentUserId] || 0;
   const [otherUser, setOtherUser] = useState<User | null>(null);
@@ -72,7 +71,7 @@ const ChatListItem: React.FC<ChatListItemProps> = ({ chat, onPress, currentUserI
         <Avatar uri={avatarUrl} name={displayName} size={52} />
         {chat.type === 'group' && (
           <View style={styles.groupBadge}>
-            <Text style={{ color: colors.white, fontSize: 10 }}>👥</Text>
+            <Text style={styles.groupBadgeText}>👥</Text>
           </View>
         )}
       </View>
@@ -194,6 +193,10 @@ const styles = createThemedStyles((colors) => ({
     shadowOpacity: 0.4,
     shadowRadius: 4,
     elevation: 3,
+  },
+  groupBadgeText: {
+    color: colors.white,
+    fontSize: 10,
   },
 }));
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useThemeColors, createThemedStyles } from '@theme/colors';
 
@@ -50,7 +50,7 @@ const MessageStatus: React.FC<MessageStatusProps> = ({ status }) => {
   );
 };
 
-const styles = createThemedStyles((colors) => ({
+const styles = createThemedStyles((_colors) => ({
   wrapper: {
     marginLeft: 2,
     alignItems: 'center',

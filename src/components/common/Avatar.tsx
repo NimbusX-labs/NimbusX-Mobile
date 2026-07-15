@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Image, Text, StyleSheet } from 'react-native';
+import { View, Image, Text } from 'react-native';
 import { useThemeColors, createThemedStyles } from '@theme/colors';
 
 interface AvatarProps {

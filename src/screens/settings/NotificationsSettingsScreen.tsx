@@ -168,7 +168,7 @@ const NotificationsSettingsScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={[styles.section, { borderTopWidth: 0, marginTop: 0 }]}>
+        <View style={styles.firstSection}>
           <SettingItem
             title="Conversation tones"
             subtitle="Play sounds for incoming and outgoing messages."
@@ -316,6 +316,11 @@ const styles = createThemedStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: colors.primaryBackground,
+  },
+  firstSection: {
+    borderTopWidth: 0,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.divider,
   },
   sectionTitle: {
     fontSize: typography.fontSize.small,

@@ -2,7 +2,6 @@ import React, { useCallback } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
@@ -47,7 +46,6 @@ const SettingItem = ({ icon, title, subtitle, onPress, isDestructive }: ItemProp
 };
 
 const AccountSettingsScreen = () => {
-  const colors = useThemeColors();
   const navigation = useNavigation<NavigationProp>();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);

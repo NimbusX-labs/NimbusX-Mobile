@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
-import { useThemeColors, createThemedStyles } from '@theme/colors';
+import { View, Text, Animated } from 'react-native';
+import { createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
 
 interface TypingIndicatorProps {
@@ -8,7 +8,6 @@ interface TypingIndicatorProps {
 }
 
 const TypingIndicator: React.FC<TypingIndicatorProps> = ({ typingUsers }) => {
-  const colors = useThemeColors();
   const opacity = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {

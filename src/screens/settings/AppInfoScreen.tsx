@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
+
   SafeAreaView,
   ScrollView,
   Animated,
@@ -16,7 +16,6 @@ const BUILD_NUMBER = '42';
 const RELEASE_DATE = 'May 2026';
 
 const InfoRow = ({ label, value }: { label: string; value: string }) => {
-  const colors = useThemeColors();
   return (
     <View style={styles.infoRow}>
       <Text style={styles.infoLabel}>{label}</Text>

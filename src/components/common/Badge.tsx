@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { useThemeColors, createThemedStyles } from '@theme/colors';
+import { View, Text } from 'react-native';
+import { createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
 
 interface BadgeProps {
@@ -9,7 +9,6 @@ interface BadgeProps {
 }
 
 const Badge: React.FC<BadgeProps> = ({ count, size = 20 }) => {
-  const colors = useThemeColors();
   if (count <= 0) return null;
 
   const displayCount = count > 99 ? '99+' : count.toString();
