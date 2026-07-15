@@ -248,6 +248,7 @@ CREATE TABLE IF NOT EXISTS public.statuses (
     avatar_url TEXT DEFAULT '',
     text TEXT DEFAULT '',
     image_url TEXT,
+    shared_with UUID[] DEFAULT '{}'::uuid[],  -- recipients who can view this pulse
     created_at TIMESTAMPTZ DEFAULT NOW(),
     expires_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '24 hours')
 );
@@ -256,9 +257,9 @@ CREATE TABLE IF NOT EXISTS public.statuses (
 ALTER TABLE public.statuses ENABLE ROW LEVEL SECURITY;
 
 -- Statuses Policies
-CREATE POLICY "Allow read access to non-expired statuses"
+CREATE POLICY "Allow read access to own or shared statuses"
     ON public.statuses FOR SELECT
-    USING (expires_at > NOW());
+    USING (expires_at > NOW() AND (auth.uid() = uid OR auth.uid() = ANY(shared_with)));
 
 CREATE POLICY "Allow users to post their own status"
     ON public.statuses FOR INSERT
