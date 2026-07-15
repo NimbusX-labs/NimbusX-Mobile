@@ -8,6 +8,7 @@ import { persistor } from '../store';
 import { useThemeColors, updateThemeStyles } from '@theme/colors';
 import { useColorScheme } from 'react-native';
 import { spacing } from '@theme/spacing';
+import { cryptoService } from '@utils/crypto';
 
 // Navigators
 import AuthNavigator from './AuthNavigator';
@@ -293,12 +294,20 @@ const AppNavigator = () => {
             console.warn('AppNavigator: Firestore fetch timed out or failed, using Auth data:', fetchErr);
           }
 
+          let publicKey = '';
+          try {
+            publicKey = await cryptoService.getOrCreateKeyPair(firebaseUser.uid);
+          } catch (keyErr) {
+            console.error('AppNavigator: key pair generation failed:', keyErr);
+          }
+
           const mergedUser = {
             uid: firebaseUser.uid,
             id: firebaseUser.uid,
             email: firebaseUser.email || '',
             displayName,
             avatarUrl,
+            publicKey,
           };
 
           try {
@@ -307,6 +316,7 @@ const AppNavigator = () => {
               email: mergedUser.email,
               displayName: mergedUser.displayName,
               avatarUrl: mergedUser.avatarUrl,
+              publicKey: mergedUser.publicKey,
             });
           } catch (e) {
             console.warn('AppNavigator: profile save failed:', e);

@@ -10,7 +10,6 @@ import {
   ActivityIndicator,
   Switch,
   Platform,
-  Animated,
 } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -26,6 +25,7 @@ import { clearChatMessages } from '@store/slices/messageSlice';
 import { removeChat } from '@store/slices/chatSlice';
 import { userSelectors, upsertUser } from '@store/slices/userSlice';
 import { User } from '@types';
+import { cryptoService } from '@utils/crypto';
 
 type ContactInfoRouteProp = RouteProp<ChatStackParamList, 'ContactInfo'>;
 
@@ -157,6 +157,14 @@ const ContactInfoScreen = () => {
   const [loading, setLoading] = useState(!otherUserRedux);
   const [presence, setPresence] = useState<{ state: 'online' | 'offline'; last_changed: number } | null>(null);
 
+  // E2EE Safety Code Calculation
+  const safetyCode = React.useMemo(() => {
+    if (currentUser?.publicKey && profile?.publicKey) {
+      return cryptoService.generateSafetyCode(currentUser.publicKey, profile.publicKey);
+    }
+    return 'Safety code: Pending (contact must go online to update keys)';
+  }, [currentUser?.publicKey, profile?.publicKey]);
+
   // ── Functional settings state ──
   const [isMuted, setIsMuted] = useState(false);
   const [mediaVisibility, setMediaVisibility] = useState<string>('default');
@@ -199,6 +207,7 @@ const ContactInfoScreen = () => {
             dispatch(clearChatMessages({ chatId }));
             Alert.alert('Done', 'Chat cleared successfully.');
           } catch (err) {
+            console.error('Clear chat error:', err);
             Alert.alert('Error', 'Could not clear messages. Please try again.');
           }
         }
@@ -218,6 +227,7 @@ const ContactInfoScreen = () => {
             dispatch(removeChat(chatId));
             navigation.popToTop();
           } catch (err) {
+            console.error('Delete chat error:', err);
             Alert.alert('Error', 'Could not delete chat. Please try again.');
           }
         }
@@ -244,7 +254,7 @@ const ContactInfoScreen = () => {
         borderBottomWidth: 1, borderBottomColor: colors.divider,
       },
     });
-  }, [navigation]);
+  }, [navigation, colors]);
 
   const displayAvatar = profile?.avatarUrl || otherUserAvatar;
   const displayNameVal = profile?.displayName || otherUserName || 'Contact';
@@ -259,7 +269,6 @@ const ContactInfoScreen = () => {
   };
 
   const disappearingLabel = DISAPPEARING_OPTIONS.find(o => o.value === disappearingHours)?.label || 'Off';
-  const mediaLabel = MEDIA_VISIBILITY_OPTIONS.find(o => o.value === mediaVisibility)?.label || 'Default';
 
   if (loading && !profile) {
     return (
@@ -354,11 +363,19 @@ const ContactInfoScreen = () => {
               onToggle={() => { setOpenEncryption(v => !v); setOpenMedia(false); setOpenDisappearing(false); }}
             >
               <View style={styles.encryptionInfo}>
-                <Icon name="shield-checkmark-outline" size={32} color={colors.primaryAccent} style={{ marginBottom: 8 }} />
+                <Icon name="shield-checkmark-outline" size={32} color={colors.success} style={styles.encryptionIcon} />
                 <Text style={styles.encryptionText}>
                   Messages, voice notes, and media files are secured with end-to-end encryption.{'\n\n'}
                   No third parties — not even NimbusX — can read your conversations.
                 </Text>
+                
+                <View style={styles.safetyCodeContainer}>
+                  <Text style={styles.safetyCodeHeader}>SAFETY CODE VERIFICATION</Text>
+                  <Text style={styles.safetyCodeDigits}>{safetyCode}</Text>
+                  <Text style={styles.safetyCodeFooter}>
+                    To verify encryption, confirm that these 25 numbers match the ones in your contact's profile details.
+                  </Text>
+                </View>
               </View>
             </AccordionRow>
 
@@ -530,11 +547,46 @@ const styles = createThemedStyles((colors) => ({
     padding: spacing.l,
     paddingHorizontal: spacing.xl,
   },
+  encryptionIcon: {
+    marginBottom: 8,
+  },
   encryptionText: {
     color: colors.textSecondary,
     fontSize: 13,
     lineHeight: 20,
     textAlign: 'center',
+  },
+  safetyCodeContainer: {
+    marginTop: spacing.m,
+    padding: spacing.m,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: 10,
+    borderWidth: 0.5,
+    borderColor: colors.divider,
+    alignItems: 'center',
+    width: '100%',
+  },
+  safetyCodeHeader: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.primaryAccent,
+    letterSpacing: 0.8,
+    marginBottom: spacing.xs,
+  },
+  safetyCodeDigits: {
+    fontSize: 14.5,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    letterSpacing: 0.5,
+    textAlign: 'center',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    marginVertical: spacing.s,
+  },
+  safetyCodeFooter: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 16,
   },
 
   // ── Action Rows (danger zone) ──
