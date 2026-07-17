@@ -1,4 +1,5 @@
 /* eslint-disable no-bitwise */
+import 'react-native-get-random-values';
 import nacl from 'tweetnacl';
 import { encode as encodeBase64, decode as decodeBase64 } from 'base64-arraybuffer';
 import AsyncStorage from '@react-native-async-storage/async-storage';

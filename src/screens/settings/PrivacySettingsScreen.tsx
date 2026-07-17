@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
@@ -17,13 +16,17 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
 import {
   toggleReadReceipts,
+  toggleDiscoverableByPhone,
   toggleLastSeen,
   toggleOnlineStatus,
   setProfilePhotoVisibility,
   setLastSeenVisibility,
+  setPhoneVisibility,
+  setTypingIndicator,
   blockUser,
   unblockUser,
   Visibility,
+  PhoneVisibility,
 } from '@store/slices/settingsSlice';
 import { useThemeColors, createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
@@ -31,31 +34,33 @@ import Avatar from '@components/common/Avatar';
 
 const { height } = Dimensions.get('window');
 
+type VisibilityOption = 'Everyone' | 'Contacts' | 'Nobody';
+type PhoneVisOption = 'everyone' | 'contacts' | 'nobody';
+
 const VisibilityPicker = ({
   value,
   onChange,
+  options,
 }: {
-  value: Visibility;
-  onChange: (v: Visibility) => void;
-}) => {
-  const options: Visibility[] = ['Everyone', 'Contacts', 'Nobody'];
-  return (
-    <View style={styles.pickerRow}>
-      {options.map(opt => (
-        <TouchableOpacity
-          key={opt}
-          style={[styles.pickerChip, value === opt && styles.pickerChipActive]}
-          onPress={() => onChange(opt)}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.pickerChipText, value === opt && styles.pickerChipTextActive]}>
-            {opt}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-};
+  value: string;
+  onChange: (v: any) => void;
+  options: { label: string; value: string }[];
+}) => (
+  <View style={styles.pickerRow}>
+    {options.map(opt => (
+      <TouchableOpacity
+        key={opt.value}
+        style={[styles.pickerChip, value === opt.value && styles.pickerChipActive]}
+        onPress={() => onChange(opt.value)}
+        activeOpacity={0.8}
+      >
+        <Text style={[styles.pickerChipText, value === opt.value && styles.pickerChipTextActive]}>
+          {opt.label}
+        </Text>
+      </TouchableOpacity>
+    ))}
+  </View>
+);
 
 const SwitchRow = ({
   icon,
@@ -94,11 +99,14 @@ const PrivacySettingsScreen = () => {
   const colors = useThemeColors();
   const dispatch = useAppDispatch();
   const {
+    discoverableByPhone,
     readReceipts,
     lastSeen,
     onlineStatus,
     profilePhotoVisibility,
     lastSeenVisibility,
+    phoneVisibility,
+    typingIndicator,
     blockedUsers,
   } = useAppSelector(state => state.settings);
 
@@ -121,9 +129,45 @@ const PrivacySettingsScreen = () => {
     setNewBlockEmail('');
   };
 
+  const visOptions: { label: string; value: string }[] = [
+    { label: 'Everyone', value: 'Everyone' },
+    { label: 'Contacts', value: 'Contacts' },
+    { label: 'Nobody', value: 'Nobody' },
+  ];
+
+  const phoneVisOptions: { label: string; value: PhoneVisOption }[] = [
+    { label: 'Everyone', value: 'everyone' },
+    { label: 'Contacts', value: 'contacts' },
+    { label: 'Nobody', value: 'nobody' },
+  ];
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Section: Discovery */}
+        <Text style={styles.sectionLabel}>DISCOVERY</Text>
+        <View style={styles.card}>
+          <SwitchRow
+            icon="search-outline"
+            title="Discoverable by Phone"
+            subtitle="Allow people who have your number to find you on NimbusX"
+            value={discoverableByPhone}
+            onToggle={() => dispatch(toggleDiscoverableByPhone())}
+          />
+          <View style={styles.cardDivider} />
+          <View style={styles.visibilityBlock}>
+            <View style={styles.visibilityHeader}>
+              <Icon name="eye-outline" size={20} color={colors.textSecondary} />
+              <Text style={styles.visibilityTitle}>Who can see my phone?</Text>
+            </View>
+            <VisibilityPicker
+              value={phoneVisibility}
+              onChange={(v) => dispatch(setPhoneVisibility(v))}
+              options={phoneVisOptions}
+            />
+          </View>
+        </View>
+
         {/* Section: Messages */}
         <Text style={styles.sectionLabel}>MESSAGES</Text>
         <View style={styles.card}>
@@ -133,6 +177,14 @@ const PrivacySettingsScreen = () => {
             subtitle="Show blue ticks when your messages are read"
             value={readReceipts}
             onToggle={() => dispatch(toggleReadReceipts())}
+          />
+          <View style={styles.cardDivider} />
+          <SwitchRow
+            icon="pencil-outline"
+            title="Typing Indicator"
+            subtitle="Show when you are typing"
+            value={typingIndicator}
+            onToggle={() => dispatch(setTypingIndicator(!typingIndicator))}
           />
         </View>
 
@@ -166,7 +218,8 @@ const PrivacySettingsScreen = () => {
             </View>
             <VisibilityPicker
               value={profilePhotoVisibility}
-              onChange={v => dispatch(setProfilePhotoVisibility(v))}
+              onChange={v => dispatch(setProfilePhotoVisibility(v as Visibility))}
+              options={visOptions}
             />
           </View>
         </View>
@@ -181,7 +234,8 @@ const PrivacySettingsScreen = () => {
             </View>
             <VisibilityPicker
               value={lastSeenVisibility}
-              onChange={v => dispatch(setLastSeenVisibility(v))}
+              onChange={v => dispatch(setLastSeenVisibility(v as Visibility))}
+              options={visOptions}
             />
           </View>
         </View>
@@ -230,7 +284,6 @@ const PrivacySettingsScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Quick Add Form */}
             <View style={styles.blockForm}>
               <Text style={styles.formTitle}>Block New Contact</Text>
               <TextInput
@@ -259,12 +312,11 @@ const PrivacySettingsScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Blocked list */}
             <Text style={styles.listTitle}>Currently Blocked</Text>
             {blockedUsers.length === 0 ? (
               <View style={styles.emptyList}>
                 <Icon name="shield-outline" size={40} color={colors.textTertiary} />
-                <Text style={styles.emptyListText}>No blocked contacts. Your workspace is clear!</Text>
+                <Text style={styles.emptyListText}>No blocked contacts.</Text>
               </View>
             ) : (
               <FlatList
@@ -301,225 +353,116 @@ const styles = createThemedStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.primaryBackground },
   flex1: { flex: 1 },
   scrollContent: {
-    paddingHorizontal: spacing.l,
-    paddingTop: spacing.l,
+    paddingHorizontal: spacing.l, paddingTop: spacing.l,
     paddingBottom: spacing.xl * 2,
   },
   sectionLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.textTertiary,
-    letterSpacing: 0.8,
-    marginBottom: spacing.s,
-    marginTop: spacing.m,
+    fontSize: 11, fontWeight: '700', color: colors.textTertiary,
+    letterSpacing: 0.8, marginBottom: spacing.s, marginTop: spacing.m,
   },
   card: {
-    backgroundColor: colors.secondaryBackground,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.divider,
-    marginBottom: spacing.s,
+    backgroundColor: colors.secondaryBackground, borderRadius: 14,
+    borderWidth: 1, borderColor: colors.divider, marginBottom: spacing.s,
     overflow: 'hidden',
   },
   cardDivider: {
-    height: 0.5,
-    backgroundColor: colors.divider,
-    marginLeft: 52,
+    height: 0.5, backgroundColor: colors.divider, marginLeft: 52,
   },
   switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.m,
-    paddingHorizontal: spacing.l,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: spacing.m, paddingHorizontal: spacing.l,
   },
   switchRowLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginRight: spacing.m,
+    flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: spacing.m,
   },
   rowIcon: { marginRight: spacing.m, width: 24, textAlign: 'center' },
   rowTitle: { fontSize: 15, fontWeight: '500', color: colors.textPrimary },
   rowSubtitle: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   visibilityBlock: { padding: spacing.l },
   visibilityHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.m,
+    flexDirection: 'row', alignItems: 'center', marginBottom: spacing.m,
   },
   visibilityTitle: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: colors.textPrimary,
-    marginLeft: spacing.m,
+    fontSize: 15, fontWeight: '500', color: colors.textPrimary, marginLeft: spacing.m,
   },
-  pickerRow: {
-    flexDirection: 'row',
-    gap: spacing.s,
-  },
+  pickerRow: { flexDirection: 'row', gap: spacing.s },
   pickerChip: {
-    flex: 1,
-    paddingVertical: spacing.s,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.cardBackground,
-    alignItems: 'center',
+    flex: 1, paddingVertical: spacing.s, borderRadius: 8, borderWidth: 1,
+    borderColor: colors.border, backgroundColor: colors.cardBackground, alignItems: 'center',
   },
   pickerChipActive: {
-    backgroundColor: 'rgba(6,182,212,0.15)',
-    borderColor: colors.primaryAccent,
+    backgroundColor: 'rgba(6,182,212,0.15)', borderColor: colors.primaryAccent,
   },
-  pickerChipText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: colors.textSecondary,
-  },
-  pickerChipTextActive: {
-    color: colors.primaryAccent,
-    fontWeight: '700',
-  },
+  pickerChipText: { fontSize: 12, fontWeight: '500', color: colors.textSecondary },
+  pickerChipTextActive: { color: colors.primaryAccent, fontWeight: '700' },
   blockedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.m,
-    paddingHorizontal: spacing.l,
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: spacing.m, paddingHorizontal: spacing.l,
   },
   footerNote: {
-    fontSize: 12,
-    color: colors.textTertiary,
-    textAlign: 'center',
-    lineHeight: 18,
-    marginTop: spacing.m,
+    fontSize: 12, color: colors.textTertiary, textAlign: 'center',
+    lineHeight: 18, marginTop: spacing.m,
   },
   modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.75)',
-    justifyContent: 'flex-end',
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.75)', justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: colors.primaryBackground,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: spacing.l,
-    paddingTop: spacing.l,
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    paddingHorizontal: spacing.l, paddingTop: spacing.l,
     paddingBottom: Platform.OS === 'ios' ? spacing.xl * 2 : spacing.xl,
     maxHeight: height * 0.85,
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     marginBottom: spacing.l,
   },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  closeButton: {
-    padding: spacing.xs,
-  },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: colors.textPrimary },
+  closeButton: { padding: spacing.xs },
   blockForm: {
-    backgroundColor: colors.secondaryBackground,
-    borderRadius: 14,
-    padding: spacing.l,
-    borderWidth: 0.5,
-    borderColor: colors.divider,
+    backgroundColor: colors.secondaryBackground, borderRadius: 14,
+    padding: spacing.l, borderWidth: 0.5, borderColor: colors.divider,
     marginBottom: spacing.l,
   },
   formTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: spacing.s,
+    fontSize: 13, fontWeight: '700', color: colors.textSecondary,
+    textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: spacing.s,
   },
   modalInput: {
-    backgroundColor: colors.inputBackground,
-    borderRadius: 8,
-    borderWidth: 0.5,
-    borderColor: colors.border,
-    color: colors.textPrimary,
-    fontSize: 14,
-    paddingHorizontal: spacing.m,
-    paddingVertical: spacing.s,
+    backgroundColor: colors.inputBackground, borderRadius: 8,
+    borderWidth: 0.5, borderColor: colors.border, color: colors.textPrimary,
+    fontSize: 14, paddingHorizontal: spacing.m, paddingVertical: spacing.s,
     marginBottom: spacing.s,
   },
   blockButton: {
-    backgroundColor: colors.error,
-    borderRadius: 8,
-    paddingVertical: spacing.s,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.s,
-    marginTop: spacing.xs,
+    backgroundColor: colors.error, borderRadius: 8, paddingVertical: spacing.s,
+    flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
+    gap: spacing.s, marginTop: spacing.xs,
   },
-  blockButtonText: {
-    color: colors.white,
-    fontWeight: '600',
-    fontSize: 14,
-  },
+  blockButtonText: { color: colors.white, fontWeight: '600', fontSize: 14 },
   listTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: spacing.s,
+    fontSize: 13, fontWeight: '700', color: colors.textSecondary,
+    textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: spacing.s,
   },
-  flatList: {
-    maxHeight: 250,
-  },
+  flatList: { maxHeight: 250 },
   blockedUserRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.s,
-    borderBottomWidth: 0.5,
-    borderBottomColor: colors.divider,
+    flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.s,
+    borderBottomWidth: 0.5, borderBottomColor: colors.divider,
   },
-  blockedUserInfo: {
-    flex: 1,
-    marginLeft: spacing.m,
-  },
-  blockedName: {
-    color: colors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  blockedEmail: {
-    color: colors.textSecondary,
-    fontSize: 12,
-  },
+  blockedUserInfo: { flex: 1, marginLeft: spacing.m },
+  blockedName: { color: colors.textPrimary, fontSize: 14, fontWeight: '600' },
+  blockedEmail: { color: colors.textSecondary, fontSize: 12 },
   unblockButton: {
-    backgroundColor: 'rgba(6,182,212,0.12)',
-    paddingHorizontal: spacing.m,
-    paddingVertical: spacing.xs,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(6,182,212,0.25)',
+    backgroundColor: 'rgba(6,182,212,0.12)', paddingHorizontal: spacing.m,
+    paddingVertical: spacing.xs, borderRadius: 6,
+    borderWidth: 1, borderColor: 'rgba(6,182,212,0.25)',
   },
-  unblockText: {
-    color: colors.primaryAccent,
-    fontSize: 12,
-    fontWeight: '600',
-  },
+  unblockText: { color: colors.primaryAccent, fontSize: 12, fontWeight: '600' },
   emptyList: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.xl,
-    gap: spacing.s,
+    alignItems: 'center', justifyContent: 'center',
+    paddingVertical: spacing.xl, gap: spacing.s,
   },
-  emptyListText: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    textAlign: 'center',
-    lineHeight: 18,
-    marginTop: spacing.s,
-  },
+  emptyListText: { color: colors.textSecondary, fontSize: 13, textAlign: 'center', lineHeight: 18 },
 }));
 
 export default PrivacySettingsScreen;

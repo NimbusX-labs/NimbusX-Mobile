@@ -4,13 +4,14 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
   Alert,
   Image,
+  ScrollView,
+  StyleSheet,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
@@ -31,14 +32,19 @@ const RegisterScreen = () => {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [focusedField, setFocusedField] = useState<'name' | 'email' | 'password' | null>(null);
+  const [focusedField, setFocusedField] = useState<'name' | 'email' | 'password' | 'phone' | null>(null);
   const { register, loading } = useAuth();
   const navigation = useNavigation<RegisterScreenNavigationProp>();
 
   const handleRegister = async () => {
-    if (!email || !password || !displayName) {
-      Alert.alert('Error', 'Please fill in all fields.');
+    if (!displayName.trim()) {
+      Alert.alert('Error', 'Display name is required.');
+      return;
+    }
+    if (!email || !password) {
+      Alert.alert('Error', 'Please fill in email and password.');
       return;
     }
 
@@ -58,7 +64,10 @@ const RegisterScreen = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
-        <View style={styles.content}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
           <Image
             source={require('../../assets/images/logo.png')}
             style={styles.logo}
@@ -68,7 +77,7 @@ const RegisterScreen = () => {
           <Text style={styles.subtitle}>Sign up to get started.</Text>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Display Name</Text>
+            <Text style={styles.inputLabel}>Display Name *</Text>
             <TextInput
               style={[
                 styles.input,
@@ -86,7 +95,7 @@ const RegisterScreen = () => {
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Email Address</Text>
+            <Text style={styles.inputLabel}>Email Address *</Text>
             <TextInput
               style={[
                 styles.input,
@@ -106,7 +115,7 @@ const RegisterScreen = () => {
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Password</Text>
+            <Text style={styles.inputLabel}>Password *</Text>
             <View
               style={[
                 styles.passwordRow,
@@ -140,6 +149,24 @@ const RegisterScreen = () => {
             </View>
           </View>
 
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Phone Number (optional)</Text>
+            <TextInput
+              style={[
+                styles.input,
+                focusedField === 'phone' && styles.inputFocused,
+              ]}
+              placeholder="+1 234 567 8900"
+              placeholderTextColor={colors.textTertiary}
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+              editable={!loading}
+              onFocus={() => setFocusedField('phone')}
+              onBlur={() => setFocusedField(null)}
+            />
+          </View>
+
           <TouchableOpacity
             style={[
               styles.button,
@@ -155,6 +182,21 @@ const RegisterScreen = () => {
             )}
           </TouchableOpacity>
 
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity
+            style={styles.phoneRegButton}
+            onPress={() => navigation.navigate('PhoneRegister')}
+            disabled={loading}
+          >
+            <Icon name="phone-portrait-outline" size={18} color={colors.textPrimary} />
+            <Text style={styles.phoneRegText}>Register with Phone</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.linkButton}
             onPress={() => navigation.goBack()}
@@ -166,7 +208,7 @@ const RegisterScreen = () => {
               <Text style={styles.linkActionText}>Login</Text>
             </Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -180,8 +222,7 @@ const styles = createThemedStyles((colors) => ({
   keyboardView: {
     flex: 1,
   },
-  content: {
-    flex: 1,
+  scrollContent: {
     padding: spacing.xl,
     justifyContent: 'center',
   },
@@ -269,6 +310,20 @@ const styles = createThemedStyles((colors) => ({
     fontSize: typography.fontSize.medium,
     fontWeight: '700',
   },
+  dividerContainer: {
+    flexDirection: 'row', alignItems: 'center', marginVertical: spacing.xl,
+  },
+  dividerLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: colors.divider },
+  dividerText: {
+    color: colors.textTertiary, paddingHorizontal: spacing.m,
+    fontSize: typography.fontSize.tiny, fontWeight: '700', letterSpacing: 1,
+  },
+  phoneRegButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: colors.cardBackground, padding: spacing.m, borderRadius: 10,
+    borderWidth: 1, borderColor: colors.divider, gap: spacing.s,
+  },
+  phoneRegText: { color: colors.textPrimary, fontSize: typography.fontSize.medium, fontWeight: '600' },
   linkButton: {
     marginTop: spacing.xl,
     alignItems: 'center',

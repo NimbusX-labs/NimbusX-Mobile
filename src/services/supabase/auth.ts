@@ -1,5 +1,6 @@
 import { supabase } from '../../config/supabase';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { phoneAuthService } from '../phoneAuth';
 
 const normalizeAuthError = (error: unknown): Error => {
   const raw =
@@ -24,26 +25,26 @@ const normalizeAuthError = (error: unknown): Error => {
   return new Error(raw);
 };
 
-// Map Supabase user structure to match Firebase user properties (e.g. uid)
 const mapUser = (supabaseUser: any) => {
   if (!supabaseUser) return null;
   const userMetadata = supabaseUser.user_metadata || {};
-  const displayName = userMetadata.displayName || userMetadata.full_name || userMetadata.name || supabaseUser.email || '';
+  const displayName = userMetadata.displayName || userMetadata.display_name || userMetadata.full_name || userMetadata.name || supabaseUser.email || '';
   const avatarUrl = userMetadata.avatarUrl || userMetadata.avatar_url || userMetadata.picture || '';
+  const username = userMetadata.username || '';
+  const phone = supabaseUser.phone || userMetadata.phone || '';
 
   return {
     ...supabaseUser,
     uid: supabaseUser.id,
-    email: supabaseUser.email,
+    email: supabaseUser.email || '',
+    phone,
+    username,
     displayName,
     avatarUrl,
   };
 };
 
 export const authService = {
-  /**
-   * Sign in with Google
-   */
   async signInWithGoogle() {
     try {
       await GoogleSignin.hasPlayServices();
@@ -67,9 +68,6 @@ export const authService = {
     }
   },
 
-  /**
-   * Sign in with Email and Password
-   */
   async signInWithEmail(email: string, password: string) {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -84,21 +82,21 @@ export const authService = {
     }
   },
 
-  /**
-   * Create account with Email and Password
-   */
-  async registerWithEmail(email: string, password: string, displayName?: string) {
+  async registerWithEmail(email: string, password: string, displayName?: string, username?: string) {
     try {
       const normalizedEmail = email.trim().toLowerCase();
+      const metadata: Record<string, string> = {
+        displayName: displayName?.trim() || normalizedEmail,
+        avatarUrl: '',
+      };
+      if (username) {
+        metadata.username = username.toLowerCase().trim();
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email: normalizedEmail,
         password,
-        options: {
-          data: {
-            displayName: displayName?.trim() || normalizedEmail,
-            avatarUrl: '',
-          },
-        },
+        options: { data: metadata },
       });
       if (error) throw error;
       return mapUser(data.user);
@@ -108,9 +106,33 @@ export const authService = {
     }
   },
 
-  /**
-   * Sign out the current user
-   */
+  async signInWithPhone(phoneNumber: string) {
+    return phoneAuthService.sendOTP(phoneNumber);
+  },
+
+  async verifyPhoneOTP(phoneNumber: string, code: string, sessionId?: string) {
+    return phoneAuthService.verifyOTP(phoneNumber, code, sessionId);
+  },
+
+  async registerWithPhone(phoneNumber: string, password: string, displayName?: string, username?: string) {
+    try {
+      const metadata: Record<string, string> = {};
+      if (displayName) metadata.displayName = displayName.trim();
+      if (username) metadata.username = username.toLowerCase().trim();
+
+      const { data, error } = await supabase.auth.signUp({
+        phone: phoneNumber,
+        password,
+        options: { data: metadata },
+      });
+      if (error) throw error;
+      return mapUser(data.user);
+    } catch (error) {
+      console.error('Supabase Auth: register with phone error', error);
+      throw normalizeAuthError(error);
+    }
+  },
+
   async signOut() {
     try {
       const { error } = await supabase.auth.signOut();
@@ -121,9 +143,6 @@ export const authService = {
     }
   },
 
-  /**
-   * Get current user (unused in app, but kept for interface completeness)
-   */
   async getCurrentUser() {
     try {
       const { data, error } = await supabase.auth.getUser();
@@ -134,11 +153,7 @@ export const authService = {
     }
   },
 
-  /**
-   * Listen for auth state changes
-   */
   onAuthStateChanged(callback: (user: any) => void) {
-    // Get initial session and trigger callback
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
         callback(mapUser(session?.user ?? null));
@@ -156,9 +171,6 @@ export const authService = {
     return () => subscription.unsubscribe();
   },
 
-  /**
-   * Send password reset email
-   */
   async resetPassword(email: string) {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
@@ -172,4 +184,3 @@ export const authService = {
     }
   },
 };
-

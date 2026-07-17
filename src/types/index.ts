@@ -1,12 +1,31 @@
+export type PhoneVisibility = 'everyone' | 'contacts' | 'nobody';
+export type ProfileVisibility = 'everyone' | 'contacts' | 'nobody';
+export type VerificationType = 'none' | 'phone' | 'official' | 'organization';
+
 export interface User {
-  id: string; // Required for entity adapter
+  id: string;
   uid: string;
   email: string;
+  username?: string;
+  shareCode?: string;
   displayName: string;
   avatarUrl?: string;
   status?: string;
+  bio?: string;
+  phoneE164?: string;
+  phoneVerifiedAt?: number;
   lastSeen?: number;
   publicKey?: string;
+  discoverableByPhone?: boolean;
+  phoneVisibility?: PhoneVisibility;
+  usernameChangedAt?: number;
+  shareCodeChangedAt?: number;
+  verificationType?: VerificationType;
+}
+
+export interface UsernameHistoryEntry {
+  username: string;
+  changedAt: number;
 }
 
 export interface Message {
@@ -18,11 +37,12 @@ export interface Message {
   status: 'pending' | 'sent' | 'delivered' | 'read' | 'failed';
   mediaUrl?: string;
   mediaType?: 'image' | 'video' | 'audio' | 'file' | 'gif' | 'sticker';
-  mediaPath?: string;     // Supabase storage path (for deletion)
-  mediaSize?: number;     // File size in bytes
+  mediaPath?: string;
+  mediaSize?: number;
   replyTo?: string;
   isEdited?: boolean;
   isPinned?: boolean;
+  mentions?: string[];
 }
 
 export interface Chat {
@@ -56,6 +76,38 @@ export interface Status {
   text?: string;
   imageUrl?: string;
   createdAt: number;
-  expiresAt: number; // 24 hours after creation
-  sharedWith: string[]; // UIDs of recipients who can see this pulse
+  expiresAt: number;
+  sharedWith: string[];
+}
+
+export interface SearchResult {
+  uid: string;
+  username?: string;
+  shareCode?: string;
+  displayName: string;
+  avatarUrl?: string;
+  phoneE164?: string;
+  verificationType?: VerificationType;
+  isContact: boolean;
+}
+
+export interface ContactMatch {
+  uid: string;
+  username?: string;
+  shareCode?: string;
+  displayName: string;
+  avatarUrl?: string;
+  phoneE164?: string;
+  verificationType?: VerificationType;
+}
+
+export interface ProcessedContact {
+  rawName: string;
+  e164: string | null;
+  hash: string;
+}
+
+export interface InvitePayload {
+  phoneNumber: string;
+  message: string;
 }

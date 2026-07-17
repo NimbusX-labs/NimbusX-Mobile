@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export type Visibility = 'Everyone' | 'Contacts' | 'Nobody';
+export type PhoneVisibility = 'everyone' | 'contacts' | 'nobody';
 export type ThemeMode = 'system' | 'dark' | 'light' | 'slate' | 'teal' | 'emerald';
 
 export interface DeviceSession {
@@ -29,11 +30,15 @@ interface BlockedUser {
 
 interface SettingsState {
   // Privacy
+  discoverableByPhone: boolean;
   readReceipts: boolean;
   lastSeen: boolean;
   onlineStatus: boolean;
   profilePhotoVisibility: Visibility;
   lastSeenVisibility: Visibility;
+  phoneVisibility: PhoneVisibility;
+  statusVisibility: Visibility;
+  typingIndicator: boolean;
   blockedUsers: BlockedUser[];
 
   // Security
@@ -77,11 +82,15 @@ interface SettingsState {
 }
 
 const initialState: SettingsState = {
+  discoverableByPhone: true,
   readReceipts: true,
   lastSeen: true,
   onlineStatus: true,
   profilePhotoVisibility: 'Everyone',
   lastSeenVisibility: 'Contacts',
+  phoneVisibility: 'everyone',
+  statusVisibility: 'Everyone',
+  typingIndicator: true,
   blockedUsers: [],
 
   appLockEnabled: false,
@@ -109,35 +118,7 @@ const initialState: SettingsState = {
   callRingtone: 'Default',
   callVibrate: 'Default',
 
-  sessions: [
-    {
-      id: '1',
-      device: 'Current Device (Android)',
-      deviceIcon: 'phone-portrait-outline',
-      location: 'Your device',
-      ip: '—',
-      lastActive: 'Active now',
-      isCurrent: true,
-    },
-    {
-      id: '2',
-      device: 'Chrome — Windows PC',
-      deviceIcon: 'laptop-outline',
-      location: 'Mumbai, India',
-      ip: '103.21.142.44',
-      lastActive: '2 hours ago',
-      isCurrent: false,
-    },
-    {
-      id: '3',
-      device: 'iPhone 15 Pro',
-      deviceIcon: 'phone-portrait-outline',
-      location: 'Delhi, India',
-      ip: '122.15.82.11',
-      lastActive: 'Yesterday, 9:41 PM',
-      isCurrent: false,
-    },
-  ],
+  sessions: [],
 
   reportStatus: 'idle',
   requestDate: null,
@@ -153,6 +134,9 @@ const settingsSlice = createSlice({
     toggleReadReceipts: (state) => {
       state.readReceipts = !state.readReceipts;
     },
+    toggleDiscoverableByPhone: (state) => {
+      state.discoverableByPhone = !state.discoverableByPhone;
+    },
     toggleLastSeen: (state) => {
       state.lastSeen = !state.lastSeen;
     },
@@ -164,6 +148,15 @@ const settingsSlice = createSlice({
     },
     setLastSeenVisibility: (state, action: PayloadAction<Visibility>) => {
       state.lastSeenVisibility = action.payload;
+    },
+    setPhoneVisibility: (state, action: PayloadAction<PhoneVisibility>) => {
+      state.phoneVisibility = action.payload;
+    },
+    setStatusVisibility: (state, action: PayloadAction<Visibility>) => {
+      state.statusVisibility = action.payload;
+    },
+    setTypingIndicator: (state, action: PayloadAction<boolean>) => {
+      state.typingIndicator = action.payload;
     },
     blockUser: (state, action: PayloadAction<BlockedUser>) => {
       if (!state.blockedUsers.some((u) => u.uid === action.payload.uid)) {
@@ -259,10 +252,14 @@ const settingsSlice = createSlice({
 
 export const {
   toggleReadReceipts,
+  toggleDiscoverableByPhone,
   toggleLastSeen,
   toggleOnlineStatus,
   setProfilePhotoVisibility,
   setLastSeenVisibility,
+  setPhoneVisibility,
+  setStatusVisibility,
+  setTypingIndicator,
   blockUser,
   unblockUser,
   setAppLock,

@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '@store/hooks';
 import { authService } from '@services/supabase/auth';
 import { firestoreService } from '@services/supabase/database';
 import { setUser, setLoading, setError, logout } from '@store/slices/authSlice';
+import { upsertUser } from '@store/slices/userSlice';
 
 export const useAuth = () => {
   const dispatch = useAppDispatch();
@@ -42,29 +43,78 @@ export const useAuth = () => {
     }
   }, [dispatch]);
 
-  const register = useCallback(async (email: string, password: string, displayName: string) => {
+  const register = useCallback(async (email: string, password: string, displayName: string, username?: string) => {
     dispatch(setLoading(true));
     try {
-      const firebaseUser = await authService.registerWithEmail(email, password, displayName);
+      const firebaseUser = await authService.registerWithEmail(email, password, displayName, username);
       if (firebaseUser) {
-        // Explicitly save the user profile to database immediately to fix the race condition
         await firestoreService.saveUser({
           uid: firebaseUser.uid,
           email: email,
+          username: username,
           displayName: displayName,
           avatarUrl: '',
         });
-        
-        // Update local Redux state immediately
+
         dispatch(setUser({
           uid: firebaseUser.uid,
           id: firebaseUser.uid,
           email: email,
+          username: username,
           displayName: displayName,
           avatarUrl: '',
         }));
+
+        if (username) {
+          dispatch(upsertUser({
+            id: firebaseUser.uid,
+            uid: firebaseUser.uid,
+            username: username.toLowerCase().trim(),
+            displayName: displayName,
+          } as any));
+        }
       }
       return firebaseUser;
+    } catch (err: any) {
+      dispatch(setError(err.message));
+      throw err;
+    } finally {
+      dispatch(setLoading(false));
+    }
+  }, [dispatch]);
+
+  const sendPhoneOTP = useCallback(async (phoneNumber: string) => {
+    dispatch(setLoading(true));
+    try {
+      const result = await authService.signInWithPhone(phoneNumber);
+      return result;
+    } catch (err: any) {
+      dispatch(setError(err.message));
+      throw err;
+    } finally {
+      dispatch(setLoading(false));
+    }
+  }, [dispatch]);
+
+  const verifyPhoneOTP = useCallback(async (phoneNumber: string, code: string, sessionId?: string) => {
+    dispatch(setLoading(true));
+    try {
+      const result = await authService.verifyPhoneOTP(phoneNumber, code, sessionId);
+      if (result.success && result.uid) {
+        const profile = await firestoreService.getUser(result.uid);
+        if (profile) {
+          dispatch(setUser({
+            uid: result.uid,
+            id: result.uid,
+            email: profile.email,
+            displayName: profile.displayName,
+            avatarUrl: profile.avatarUrl,
+            username: profile.username,
+            phoneE164: profile.phoneE164,
+          }));
+        }
+      }
+      return result;
     } catch (err: any) {
       dispatch(setError(err.message));
       throw err;
@@ -77,7 +127,6 @@ export const useAuth = () => {
     try {
       await authService.signOut();
       dispatch(logout());
-      // Purge all persisted data so contacts/messages don't leak to the next account
       const { persistor } = require('@store/index');
       await persistor.purge();
     } catch (err: any) {
@@ -104,8 +153,9 @@ export const useAuth = () => {
     login,
     register,
     loginWithGoogle,
+    sendPhoneOTP,
+    verifyPhoneOTP,
     signOut,
     resetPassword,
   };
 };
-

@@ -2,6 +2,8 @@ export type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
+  UsernameSetup: { uid: string; displayName: string };
+  PhoneRegister: undefined;
 };
 
 export type MainTabParamList = {
@@ -35,6 +37,9 @@ export type ChatStackParamList = {
   ChangeNumber: undefined;
   Devices: undefined;
   RequestInfo: undefined;
+  QRCode: undefined;
+  UsernameSetup: undefined;
+  ContactSync: undefined;
 };
 
 export type RootStackParamList = {

@@ -13,6 +13,7 @@ import CreateGroupScreen from '@screens/groups/CreateGroupScreen';
 import GroupChatScreen from '@screens/groups/GroupChatScreen';
 import GroupInfoScreen from '@screens/groups/GroupInfoScreen';
 import ContactInfoScreen from '@screens/chats/ContactInfoScreen';
+import ContactSyncScreen from '@screens/chats/ContactSyncScreen';
 import ProfileScreen from '@screens/settings/ProfileScreen';
 import StorageSetupScreen from '@screens/settings/StorageSetupScreen';
 import AccountSettingsScreen from '@screens/settings/AccountSettingsScreen';
@@ -28,6 +29,8 @@ import SecuritySettingsScreen from '@screens/settings/SecuritySettingsScreen';
 import ChangeNumberScreen from '@screens/settings/ChangeNumberScreen';
 import DevicesScreen from '@screens/settings/DevicesScreen';
 import RequestInfoScreen from '@screens/settings/RequestInfoScreen';
+import QRCodeScreen from '@screens/settings/QRCodeScreen';
+import UsernameSetupScreen from '@screens/auth/UsernameSetupScreen';
 
 const Stack = createStackNavigator<ChatStackParamList>();
 
@@ -73,6 +76,9 @@ const ChatNavigator = () => {
       <Stack.Screen name="ChangeNumber" component={ChangeNumberScreen} options={{ title: 'Change Number' }} />
       <Stack.Screen name="Devices" component={DevicesScreen} options={{ title: 'Linked Devices' }} />
       <Stack.Screen name="RequestInfo" component={RequestInfoScreen} options={{ title: 'Request Account Info' }} />
+      <Stack.Screen name="QRCode" component={QRCodeScreen} options={{ title: 'My QR Code' }} />
+      <Stack.Screen name="ContactSync" component={ContactSyncScreen} options={{ title: 'Find Contacts' }} />
+      <Stack.Screen name="UsernameSetup" component={UsernameSetupScreen} options={{ title: 'Nimbus ID' }} />
     </Stack.Navigator>
   );
 };

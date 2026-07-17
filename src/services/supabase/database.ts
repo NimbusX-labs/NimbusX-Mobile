@@ -2,7 +2,6 @@ import { supabase } from '../../config/supabase';
 import { Chat, Message, User, Status } from '@types';
 import { cryptoService } from '../../utils/crypto';
 
-// In-memory cache for other users' public keys: uid -> public_key
 const publicKeyCache: Record<string, string> = {};
 
 async function getOrFetchPublicKey(uid: string): Promise<string | null> {
@@ -22,7 +21,6 @@ async function getOrFetchPublicKey(uid: string): Promise<string | null> {
   return null;
 }
 
-// Helper to map DB chat to client Chat type
 const mapChat = (chat: any): Chat => {
   return {
     id: chat.id,
@@ -44,7 +42,6 @@ const mapChat = (chat: any): Chat => {
 
 const mapChats = (chats: any[]): Chat[] => chats.map(mapChat);
 
-// Helper to map DB message to client Message type
 const mapMessage = (msg: any): Message => {
   return {
     id: msg.id,
@@ -65,10 +62,32 @@ const mapMessage = (msg: any): Message => {
 
 const mapMessages = (msgs: any[]): Message[] => msgs.map(mapMessage);
 
+const mapProfile = (data: any): User => {
+  if (!data) return null as unknown as User;
+  return {
+    id: data.id,
+    uid: data.id,
+    email: data.email || '',
+    username: data.username || undefined,
+    shareCode: data.share_code || undefined,
+    displayName: data.display_name || data.username || '',
+    avatarUrl: data.avatar_url || '',
+    status: data.status || '',
+    bio: data.bio || undefined,
+    phoneE164: data.phone_e164 || undefined,
+    phoneVerifiedAt: data.phone_verified_at ? new Date(data.phone_verified_at).getTime() : undefined,
+    isOnline: data.is_online || false,
+    lastSeen: data.last_seen ? new Date(data.last_seen).getTime() : undefined,
+    publicKey: data.public_key || '',
+    discoverableByPhone: data.discoverable_by_phone ?? true,
+    phoneVisibility: data.phone_visibility || 'everyone',
+    usernameChangedAt: data.username_changed_at ? new Date(data.username_changed_at).getTime() : undefined,
+    shareCodeChangedAt: data.share_code_changed_at ? new Date(data.share_code_changed_at).getTime() : undefined,
+    verificationType: data.verification_type || 'none',
+  } as User;
+};
+
 export const firestoreService = {
-  /**
-   * Listen to chats a user belongs to
-   */
   listenUserChats(uid: string, callback: (chats: Chat[]) => void) {
     const fetchChats = async () => {
       const { data, error } = await supabase
@@ -78,13 +97,11 @@ export const firestoreService = {
         .order('last_message_at', { ascending: false });
 
       if (!error && data) {
-        // Collect all partner user IDs from 1-to-1 chats
         const otherUserIds = data
           .filter((chat) => chat.type === 'one-to-one')
           .map((chat) => chat.members?.find((m: string) => m !== uid))
           .filter(Boolean) as string[];
 
-        // Batch fetch public keys that are not already cached
         const missingIds = otherUserIds.filter((id) => !publicKeyCache[id]);
         if (missingIds.length > 0) {
           try {
@@ -105,7 +122,6 @@ export const firestoreService = {
           }
         }
 
-        // Decrypt the last message of each 1-to-1 chat
         const myPrivateKey = await cryptoService.getPrivateKey(uid);
         const decryptedChats = await Promise.all(
           data.map(async (chat) => {
@@ -141,7 +157,6 @@ export const firestoreService = {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'chats' },
         (payload) => {
-          // Trigger reload if the user is or was a member of the chat
           const oldMembers = (payload.old as any)?.members || [];
           const newMembers = (payload.new as any)?.members || [];
           if (oldMembers.includes(uid) || newMembers.includes(uid)) {
@@ -156,9 +171,6 @@ export const firestoreService = {
     };
   },
 
-  /**
-   * Listen to messages in a specific chat
-   */
   listenMessages(chatId: string, limit: number, callback: (messages: Message[]) => void) {
     const fetchMessages = async () => {
       const { data, error } = await supabase
@@ -169,7 +181,6 @@ export const firestoreService = {
         .limit(limit);
 
       if (!error && data) {
-        // Fetch chat details to check if it is a 1-to-1 chat (E2EE target)
         const { data: chatData } = await supabase
           .from('chats')
           .select('type, members')
@@ -234,16 +245,12 @@ export const firestoreService = {
     };
   },
 
-  /**
-   * Send a message to a chat
-   */
   async sendMessage(message: Partial<Message>) {
     const { chatId } = message;
     if (!chatId) throw new Error('Chat ID is required');
 
     let textToSend = message.text || '';
 
-    // Check if E2EE is required (1-to-1 chat)
     const { data: chatData } = await supabase
       .from('chats')
       .select('type, members')
@@ -288,16 +295,12 @@ export const firestoreService = {
       throw error;
     }
 
-    // Return the original decrypted message so Redux is updated with plaintext
     return {
       ...data,
       text: message.text || '',
     };
   },
 
-  /**
-   * Delete a message
-   */
   async deleteMessage(chatId: string, messageId: string) {
     if (!chatId || !messageId) return;
     const { error } = await supabase
@@ -311,9 +314,6 @@ export const firestoreService = {
     }
   },
 
-  /**
-   * Edit a message's text
-   */
   async editMessage(chatId: string, messageId: string, newText: string) {
     if (!chatId || !messageId) return;
     const { error } = await supabase
@@ -327,9 +327,6 @@ export const firestoreService = {
     }
   },
 
-  /**
-   * Pin or unpin a message
-   */
   async setPinMessage(chatId: string, messageId: string, isPinned: boolean) {
     if (!chatId || !messageId) return;
     const { error } = await supabase
@@ -343,9 +340,6 @@ export const firestoreService = {
     }
   },
 
-  /**
-   * Create a new chat or group
-   */
   async createChat(chatConfig: Partial<Chat>) {
     const insertData: any = {
       type: chatConfig.type,
@@ -372,9 +366,6 @@ export const firestoreService = {
     return data.id;
   },
 
-  /**
-   * Delete a chat document
-   */
   async deleteChat(chatId: string) {
     const { error } = await supabase
       .from('chats')
@@ -387,41 +378,41 @@ export const firestoreService = {
     }
   },
 
-  /**
-   * Update or create a user profile in the database.
-   * Uses RPC (SECURITY DEFINER) when available to avoid RLS insert failures.
-   */
   async saveUser(userObj: Partial<User> & { uid: string }) {
     const { uid, ...data } = userObj;
     const email = data.email ? data.email.toLowerCase().trim() : undefined;
 
-    if (!email) {
-      console.warn('saveUser: email is required to create/update a profile');
+    if (!email && !data.phoneE164) {
+      console.warn('saveUser: email or phone is required to create/update a profile');
       return;
     }
 
     const { data: sessionData } = await supabase.auth.getSession();
     const sessionUid = sessionData.session?.user?.id;
-    if (sessionUid && sessionUid !== uid) {
-      console.warn('saveUser: session user does not match uid; using session user');
-    }
-
     const profileId = sessionUid || uid;
 
-    const { error: rpcError } = await supabase.rpc('upsert_own_profile', {
-      p_email: email,
+    const rpcParams: Record<string, unknown> = {
+      p_email: email ?? null,
       p_display_name: data.displayName ?? null,
       p_avatar_url: data.avatarUrl ?? null,
       p_status: data.status ?? null,
-    });
+    };
+    if (data.username !== undefined) rpcParams.p_username = data.username.toLowerCase().trim();
+    if (data.phoneE164 !== undefined) rpcParams.p_phone_e164 = data.phoneE164;
+    if (data.bio !== undefined) rpcParams.p_bio = data.bio;
+    if (data.publicKey !== undefined) rpcParams.p_public_key = data.publicKey;
+    if (data.discoverableByPhone !== undefined) rpcParams.p_discoverable_by_phone = data.discoverableByPhone;
+    if (data.phoneVisibility !== undefined) rpcParams.p_phone_visibility = data.phoneVisibility;
+    if (data.usernameChangedAt !== undefined) rpcParams.p_username_changed_at = new Date(data.usernameChangedAt).toISOString();
+    if (data.shareCodeChangedAt !== undefined) rpcParams.p_share_code_changed_at = new Date(data.shareCodeChangedAt).toISOString();
+
+    const { error: rpcError } = await supabase.rpc('upsert_own_profile', rpcParams);
 
     if (!rpcError) {
-      // Save public key if provided
-      if (data.publicKey) {
-        await supabase
-          .from('profiles')
-          .update({ public_key: data.publicKey })
-          .eq('id', profileId);
+      const extraUpdates: Record<string, unknown> = {};
+      if (data.shareCode) extraUpdates.share_code = data.shareCode;
+      if (Object.keys(extraUpdates).length > 0) {
+        await supabase.from('profiles').update(extraUpdates).eq('id', profileId);
       }
       return;
     }
@@ -437,13 +428,20 @@ export const firestoreService = {
     }
 
     const patch: Record<string, unknown> = {
-      email,
       updated_at: new Date().toISOString(),
     };
+    if (email !== undefined) patch.email = email;
     if (data.displayName !== undefined) patch.display_name = data.displayName;
     if (data.avatarUrl !== undefined) patch.avatar_url = data.avatarUrl;
     if (data.status !== undefined) patch.status = data.status;
     if (data.publicKey !== undefined) patch.public_key = data.publicKey;
+    if (data.username !== undefined) patch.username = data.username.toLowerCase().trim();
+    if (data.phoneE164 !== undefined) patch.phone_e164 = data.phoneE164;
+    if (data.bio !== undefined) patch.bio = data.bio;
+    if (data.shareCode !== undefined) patch.share_code = data.shareCode;
+    if (data.usernameChangedAt !== undefined) patch.username_changed_at = new Date(data.usernameChangedAt).toISOString();
+    if (data.shareCodeChangedAt !== undefined) patch.share_code_changed_at = new Date(data.shareCodeChangedAt).toISOString();
+    if (data.verificationType !== undefined) patch.verification_type = data.verificationType;
 
     const { data: updatedRows, error: updateError } = await supabase
       .from('profiles')
@@ -457,28 +455,43 @@ export const firestoreService = {
 
     const insertRow: Record<string, unknown> = {
       id: profileId,
-      email,
+      email: email ?? '',
       display_name: data.displayName ?? '',
       avatar_url: data.avatarUrl ?? '',
       status: data.status ?? 'Hey there! I am using NimbusX',
       public_key: data.publicKey ?? '',
+      username: data.username?.toLowerCase().trim() ?? null,
+      phone_e164: data.phoneE164 ?? null,
+      bio: data.bio ?? null,
+      share_code: data.shareCode ?? null,
+      verification_type: 'none',
       updated_at: new Date().toISOString(),
     };
 
     const { error: insertError } = await supabase.from('profiles').insert(insertRow);
 
     if (insertError) {
-      console.error(
-        'Save user failed. Run supabase-fix-profiles-rls.sql in Supabase SQL Editor.',
-        insertError,
-      );
+      console.error('Save user failed:', insertError);
       throw insertError;
     }
   },
 
-  /**
-   * Get a user profile from the database
-   */
+  async addUsernameHistory(uid: string, oldUsername: string) {
+    const { error } = await supabase
+      .from('username_history')
+      .insert({ user_id: uid, username: oldUsername.toLowerCase().trim() });
+
+    if (error && error.code !== '23505') {
+      console.error('Failed to record username history:', error);
+    }
+  },
+
+  async getOldReservedUsernames(): Promise<Set<string>> {
+    const { data, error } = await supabase.rpc('get_old_usernames');
+    if (error || !data) return new Set();
+    return new Set(data.map((r: any) => r.username));
+  },
+
   async getUser(uid: string): Promise<User | null> {
     const { data, error } = await supabase
       .from('profiles')
@@ -486,66 +499,97 @@ export const firestoreService = {
       .eq('id', uid)
       .maybeSingle();
 
-    if (error) {
-      console.error('Get user failed:', error);
-      return null;
-    }
-    if (!data) return null;
+    if (error || !data) return null;
 
-    // Cache the public key
     if (data.public_key) {
       publicKeyCache[uid] = data.public_key;
     }
 
-    return {
-      id: data.id,
-      uid: data.id,
-      email: data.email,
-      displayName: data.display_name || '',
-      avatarUrl: data.avatar_url || '',
-      status: data.status || '',
-      isOnline: data.is_online || false,
-      lastSeen: data.last_seen ? new Date(data.last_seen).getTime() : undefined,
-      publicKey: data.public_key || '',
-    } as User;
+    return mapProfile(data);
   },
 
-  /**
-   * Search users by exact email
-   */
-  async searchUserByEmail(email: string): Promise<User | null> {
-    // Call the security-definer RPC to bypass restricted read RLS
+  async searchUserByUsername(username: string): Promise<User | null> {
+    const normalized = username.toLowerCase().replace(/^@/, '').trim();
     const { data, error } = await supabase
-      .rpc('search_profile_by_email', { p_email: email.toLowerCase().trim() });
+      .rpc('search_profile_by_username', { p_username: normalized });
 
-    if (error) {
-      console.error('Search user by email failed (rpc):', error);
-      return null;
-    }
-    if (!data || data.length === 0) return null;
+    if (error || !data || data.length === 0) return null;
     const profile = data[0];
 
-    // Cache the public key
     if (profile.public_key) {
       publicKeyCache[profile.id] = profile.public_key;
     }
 
-    return {
-      id: profile.id,
-      uid: profile.id,
-      email: profile.email,
-      displayName: profile.display_name || '',
-      avatarUrl: profile.avatar_url || '',
-      status: profile.status || '',
-      isOnline: profile.is_online || false,
-      lastSeen: profile.last_seen ? new Date(profile.last_seen).getTime() : undefined,
-      publicKey: profile.public_key || '',
-    } as User;
+    return mapProfile(profile);
   },
 
-  /**
-   * Add a contact to a user's contact list
-   */
+  async searchUsers(query: string, currentUid: string): Promise<User[]> {
+    const trimmed = query.trim();
+    if (trimmed.length < 2) return [];
+
+    const profileFields = 'id, email, username, share_code, display_name, avatar_url, status, phone_e164, public_key, is_online, last_seen';
+
+    if (trimmed.startsWith('@')) {
+      const username = trimmed.slice(1).toLowerCase();
+      const { data } = await supabase
+        .from('profiles')
+        .select(profileFields)
+        .ilike('username', `${username}%`)
+        .neq('id', currentUid)
+        .limit(10);
+
+      return (data || []).map(mapProfile);
+    }
+
+    if (trimmed.startsWith('NX') && trimmed.length >= 5) {
+      const { data } = await supabase
+        .from('profiles')
+        .select(profileFields)
+        .eq('share_code', trimmed.toUpperCase())
+        .limit(5);
+
+      return (data || []).map(mapProfile);
+    }
+
+    const phoneDigits = trimmed.replace(/\D/g, '');
+    if (phoneDigits.length >= 7) {
+      const { data } = await supabase
+        .from('profiles')
+        .select(profileFields)
+        .ilike('phone_e164', `%${phoneDigits}`)
+        .neq('id', currentUid)
+        .limit(5);
+
+      return (data || []).map(mapProfile);
+    }
+
+    const [{ data: byName }, { data: byUsername }] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select(profileFields)
+        .ilike('display_name', `%${trimmed}%`)
+        .neq('id', currentUid)
+        .limit(10),
+      supabase
+        .from('profiles')
+        .select(profileFields)
+        .ilike('username', `%${trimmed}%`)
+        .neq('id', currentUid)
+        .limit(10),
+    ]);
+
+    const seen = new Set<string>();
+    const results: User[] = [];
+    for (const p of [...(byName || []), ...(byUsername || [])]) {
+      if (!seen.has(p.id)) {
+        seen.add(p.id);
+        results.push(mapProfile(p));
+      }
+    }
+
+    return results.slice(0, 20);
+  },
+
   async addContact(currentUid: string, contactData: User) {
     if (currentUid === contactData.uid) {
       throw new Error('Cannot add yourself as a contact');
@@ -559,22 +603,17 @@ export const firestoreService = {
       });
 
     if (error) {
-      if (error.code === '23505') { // Unique key violation
-        return;
-      }
+      if (error.code === '23505') return;
       console.error('Add contact failed:', error);
       throw error;
     }
   },
 
-  /**
-   * Listen to a user's contacts
-   */
   listenContacts(uid: string, callback: (contacts: User[]) => void) {
     const fetchContacts = async () => {
       const { data, error } = await supabase
         .from('contacts')
-        .select('profiles:contact_id(id, email, display_name, avatar_url, status, is_online, last_seen)')
+        .select('profiles:contact_id(id, email, username, share_code, display_name, avatar_url, status, phone_e164, is_online, last_seen, public_key)')
         .eq('user_id', uid);
 
       if (!error && data) {
@@ -582,20 +621,10 @@ export const firestoreService = {
           .map((row: any) => {
             const p = row.profiles;
             if (!p) return null;
-            return {
-              id: p.id,
-              uid: p.id,
-              email: p.email,
-              displayName: p.display_name || '',
-              avatarUrl: p.avatar_url || '',
-              status: p.status || '',
-              isOnline: p.is_online || false,
-              lastSeen: p.last_seen ? new Date(p.last_seen).getTime() : undefined,
-            };
+            return mapProfile(p);
           })
           .filter(Boolean) as User[];
 
-        // Order contacts alphabetically
         contacts.sort((a, b) => a.displayName.localeCompare(b.displayName));
         callback(contacts);
       } else if (error) {
@@ -626,9 +655,6 @@ export const firestoreService = {
     };
   },
 
-  /**
-   * Batch update message statuses
-   */
   async updateMessageStatus(chatId: string, messageIds: string[], status: 'delivered' | 'read') {
     if (!messageIds || messageIds.length === 0) return;
 
@@ -643,9 +669,6 @@ export const firestoreService = {
     }
   },
 
-  /**
-   * Set typing status for a user in a chat
-   */
   async setTypingStatus(chatId: string, uid: string, isTyping: boolean) {
     if (!chatId || !uid) return;
 
@@ -673,9 +696,6 @@ export const firestoreService = {
     }
   },
 
-  /**
-   * Post a new pulse (private status shared with selected recipients)
-   */
   async postStatus(status: Omit<Status, 'id'>): Promise<string> {
     const now = new Date();
     const expiresAt = status.expiresAt ? new Date(status.expiresAt) : new Date(now.getTime() + 24 * 60 * 60 * 1000);
@@ -702,9 +722,6 @@ export const firestoreService = {
     return data.id;
   },
 
-  /**
-   * Listen to pulses shared with the current user (or created by them)
-   */
   listenStatuses(currentUid: string, callback: (statuses: Status[]) => void) {
     const fetchStatuses = async () => {
       const nowStr = new Date().toISOString();
@@ -765,9 +782,6 @@ export const firestoreService = {
     };
   },
 
-  /**
-   * Update group details
-   */
   async updateGroupDetails(chatId: string, data: { name?: string; description?: string; avatarUrl?: string }) {
     const updates: any = {};
     if (data.name !== undefined) updates.name = data.name;
@@ -785,9 +799,6 @@ export const firestoreService = {
     }
   },
 
-  /**
-   * Remove a member from a group
-   */
   async removeGroupMember(chatId: string, uid: string) {
     const { data, error } = await supabase
       .from('chats')
@@ -810,12 +821,7 @@ export const firestoreService = {
 
     const { error: updateError } = await supabase
       .from('chats')
-      .update({
-        members,
-        unread_count: unreadCount,
-        typing,
-        admins,
-      })
+      .update({ members, unread_count: unreadCount, typing, admins })
       .eq('id', chatId);
 
     if (updateError) {
@@ -824,16 +830,10 @@ export const firestoreService = {
     }
   },
 
-  /**
-   * Leave a group (self-remove)
-   */
   async leaveGroup(chatId: string, uid: string) {
     return this.removeGroupMember(chatId, uid);
   },
 
-  /**
-   * Delete a group and cascade delete all its messages
-   */
   async deleteGroup(chatId: string) {
     const { error } = await supabase
       .from('chats')
@@ -846,9 +846,6 @@ export const firestoreService = {
     }
   },
 
-  /**
-   * Clear all messages in a specific chat
-   */
   async clearMessages(chatId: string) {
     if (!chatId) return;
     const { error } = await supabase
@@ -862,4 +859,3 @@ export const firestoreService = {
     }
   },
 };
-
