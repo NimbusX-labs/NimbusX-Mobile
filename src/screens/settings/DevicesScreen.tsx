@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
@@ -20,18 +19,61 @@ import {
 } from '@store/slices/settingsSlice';
 import { useThemeColors, createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
-
+import DeviceInfo from 'react-native-device-info';
 
 const DevicesScreen = () => {
   const colors = useThemeColors();
   const dispatch = useAppDispatch();
   const sessions = useAppSelector((state) => state.settings.sessions);
   const user = useAppSelector((state) => state.auth.user);
+  const [currentDevice, setCurrentDevice] = useState<{
+    id: string;
+    device: string;
+    deviceIcon: string;
+    location: string;
+    ip: string;
+    lastActive: string;
+    isCurrent: boolean;
+  } | null>(null);
 
-  // QR Link State
   const [linkModalVisible, setLinkModalVisible] = useState(false);
   const [linkingProgress, setLinkingProgress] = useState(0);
   const [linkingActive, setLinkingActive] = useState(false);
+
+  useEffect(() => {
+    loadCurrentDevice();
+  }, []);
+
+  const loadCurrentDevice = async () => {
+    try {
+      const brand = await DeviceInfo.getBrand();
+      const model = await DeviceInfo.getModel();
+      const systemName = Platform.OS === 'android' ? 'Android' : 'iOS';
+      const systemVersion = await DeviceInfo.getSystemVersion();
+      const deviceName = `${brand} ${model}`;
+      const osInfo = `${systemName} ${systemVersion}`;
+
+      setCurrentDevice({
+        id: 'current',
+        device: deviceName,
+        deviceIcon: Platform.OS === 'android' ? 'phone-portrait-outline' : 'tablet-portrait-outline',
+        location: osInfo,
+        ip: '',
+        lastActive: 'Active now',
+        isCurrent: true,
+      });
+    } catch {
+      setCurrentDevice({
+        id: 'current',
+        device: 'Unknown Device',
+        deviceIcon: 'phone-portrait-outline',
+        location: Platform.OS,
+        ip: '',
+        lastActive: 'Active now',
+        isCurrent: true,
+      });
+    }
+  };
 
   const handleTerminate = (id: string, device: string) => {
     Alert.alert(
@@ -69,7 +111,6 @@ const DevicesScreen = () => {
     );
   };
 
-  // Simulate scanning QR code to link device
   const handleLinkDevice = () => {
     if (linkingActive) return;
     setLinkingActive(true);
@@ -82,7 +123,6 @@ const DevicesScreen = () => {
           setLinkingActive(false);
           setLinkModalVisible(false);
 
-          // Add simulated device
           const deviceNames = ['MacBook Pro — Safari', 'iPad Air — NimbusApp', 'Linux PC — Firefox'];
           const chosenDevice = deviceNames[Math.floor(Math.random() * deviceNames.length)];
           const newSessionId = Math.random().toString(36).substring(7);
@@ -108,12 +148,10 @@ const DevicesScreen = () => {
   };
 
   const otherSessions = sessions.filter((s) => !s.isCurrent);
-  const currentSession = sessions.find((s) => s.isCurrent);
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Header Info */}
         <View style={styles.headerCard}>
           <Icon name="shield-checkmark-outline" size={20} color={colors.primaryAccent} />
           <Text style={styles.headerText}>
@@ -122,7 +160,6 @@ const DevicesScreen = () => {
           </Text>
         </View>
 
-        {/* Action Link Device */}
         <TouchableOpacity
           style={styles.linkDeviceButton}
           onPress={() => {
@@ -136,26 +173,25 @@ const DevicesScreen = () => {
           <Text style={styles.linkDeviceText}>Link a New Device</Text>
         </TouchableOpacity>
 
-        {/* Current Device */}
         <Text style={styles.sectionLabel}>THIS DEVICE</Text>
-        {currentSession && (
+        {currentDevice && (
           <View style={styles.sessionCard}>
             <View style={styles.sessionIconBox}>
-              <Icon name={currentSession.deviceIcon} size={22} color={colors.primaryAccent} />
+              <Icon name={currentDevice.deviceIcon} size={22} color={colors.primaryAccent} />
             </View>
             <View style={styles.sessionInfo}>
               <View style={styles.sessionTitleRow}>
-                <Text style={styles.sessionDevice}>{currentSession.device}</Text>
+                <Text style={styles.sessionDevice}>{currentDevice.device}</Text>
                 <View style={styles.currentBadge}>
                   <Text style={styles.currentBadgeText}>Active</Text>
                 </View>
               </View>
-              <Text style={styles.sessionMeta}>{currentSession.lastActive}</Text>
+              <Text style={styles.sessionMeta}>{currentDevice.location}</Text>
+              <Text style={styles.sessionTime}>{currentDevice.lastActive}</Text>
             </View>
           </View>
         )}
 
-        {/* Other Sessions */}
         {otherSessions.length > 0 && (
           <>
             <Text style={styles.sectionLabel}>OTHER SESSIONS</Text>
@@ -167,7 +203,7 @@ const DevicesScreen = () => {
                 <View style={styles.sessionInfo}>
                   <Text style={styles.sessionDevice}>{session.device}</Text>
                   <Text style={styles.sessionMeta}>
-                    {session.location} · {session.ip}
+                    {session.location}{session.ip ? ` · ${session.ip}` : ''}
                   </Text>
                   <Text style={styles.sessionTime}>{session.lastActive}</Text>
                 </View>
@@ -181,7 +217,6 @@ const DevicesScreen = () => {
               </View>
             ))}
 
-            {/* Terminate All Button */}
             <TouchableOpacity
               style={styles.terminateAllButton}
               onPress={handleTerminateAll}
@@ -203,7 +238,6 @@ const DevicesScreen = () => {
         )}
       </ScrollView>
 
-      {/* QR scanner / device linking simulated Modal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -229,13 +263,11 @@ const DevicesScreen = () => {
                 your computer. Scan the QR code presented on your screen.
               </Text>
 
-              {/* Simulated Camera Scanner View */}
               <View style={styles.cameraBox}>
                 <View style={styles.scannerTarget}>
                   {linkingActive && (
                     <ActivityIndicator size="large" color={colors.primaryAccent} style={styles.spinner} />
                   )}
-                  {/* Glowing Laser Scan effect */}
                   <View style={styles.scannerLaser} />
                 </View>
                 <Icon name="camera-outline" size={48} color="rgba(255,255,255,0.15)" style={styles.camIcon} />
@@ -265,259 +297,94 @@ const DevicesScreen = () => {
 const styles = createThemedStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.primaryBackground },
   boldTextPrimaryAccent: { fontWeight: '700', color: colors.primaryAccent },
-  scrollContent: {
-    paddingHorizontal: spacing.l,
-    paddingTop: spacing.l,
-    paddingBottom: spacing.xl * 2,
-  },
+  scrollContent: { paddingHorizontal: spacing.l, paddingTop: spacing.l, paddingBottom: spacing.xl * 2 },
   headerCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: 'rgba(6,182,212,0.06)',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(6,182,212,0.2)',
-    padding: spacing.l,
-    marginBottom: spacing.l,
-    gap: spacing.s,
+    flexDirection: 'row', alignItems: 'flex-start',
+    backgroundColor: 'rgba(6,182,212,0.06)', borderRadius: 12,
+    borderWidth: 1, borderColor: 'rgba(6,182,212,0.2)',
+    padding: spacing.l, marginBottom: spacing.l, gap: spacing.s,
   },
-  headerText: {
-    flex: 1,
-    fontSize: 13,
-    color: colors.textSecondary,
-    lineHeight: 20,
-    marginLeft: spacing.s,
-  },
+  headerText: { flex: 1, fontSize: 13, color: colors.textSecondary, lineHeight: 20, marginLeft: spacing.s },
   linkDeviceButton: {
-    backgroundColor: colors.primaryAccent,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.m,
-    marginBottom: spacing.l,
-    gap: spacing.s,
+    backgroundColor: colors.primaryAccent, borderRadius: 12,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    paddingVertical: spacing.m, marginBottom: spacing.l, gap: spacing.s,
   },
-  linkDeviceText: {
-    color: colors.white,
-    fontWeight: '700',
-    fontSize: 15,
-  },
+  linkDeviceText: { color: colors.white, fontWeight: '700', fontSize: 15 },
   sectionLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.textTertiary,
-    letterSpacing: 0.8,
-    marginBottom: spacing.s,
-    marginTop: spacing.m,
+    fontSize: 11, fontWeight: '700', color: colors.textTertiary,
+    letterSpacing: 0.8, marginBottom: spacing.s, marginTop: spacing.m,
   },
   sessionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.secondaryBackground,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.divider,
-    padding: spacing.l,
-    marginBottom: spacing.s,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: colors.secondaryBackground,
+    borderRadius: 14, borderWidth: 1, borderColor: colors.divider,
+    padding: spacing.l, marginBottom: spacing.s,
   },
   sessionIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
-    backgroundColor: colors.cardBackground,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.m,
+    width: 44, height: 44, borderRadius: 10, backgroundColor: colors.cardBackground,
+    alignItems: 'center', justifyContent: 'center', marginRight: spacing.m,
   },
   sessionInfo: { flex: 1 },
-  sessionTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 3,
-  },
-  sessionDevice: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.textPrimary,
-    marginRight: spacing.s,
-  },
+  sessionTitleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 3 },
+  sessionDevice: { fontSize: 15, fontWeight: '600', color: colors.textPrimary, marginRight: spacing.s },
   currentBadge: {
-    backgroundColor: 'rgba(16,185,129,0.15)',
-    borderRadius: 6,
-    paddingHorizontal: spacing.s,
-    paddingVertical: 1,
-    borderWidth: 1,
-    borderColor: 'rgba(16,185,129,0.3)',
+    backgroundColor: 'rgba(16,185,129,0.15)', borderRadius: 6,
+    paddingHorizontal: spacing.s, paddingVertical: 1,
+    borderWidth: 1, borderColor: 'rgba(16,185,129,0.3)',
   },
-  currentBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: colors.success,
-  },
-  sessionMeta: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginBottom: 2,
-  },
-  sessionTime: {
-    fontSize: 11,
-    color: colors.textTertiary,
-  },
-  terminateButton: {
-    padding: spacing.s,
-    marginLeft: spacing.s,
-  },
+  currentBadgeText: { fontSize: 10, fontWeight: '700', color: colors.success },
+  sessionMeta: { fontSize: 12, color: colors.textSecondary, marginBottom: 2 },
+  sessionTime: { fontSize: 11, color: colors.textTertiary },
+  terminateButton: { padding: spacing.s, marginLeft: spacing.s },
   terminateAllButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(239,68,68,0.08)',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(239,68,68,0.3)',
-    paddingVertical: spacing.m,
-    marginTop: spacing.m,
-    gap: spacing.s,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(239,68,68,0.08)', borderRadius: 12,
+    borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)',
+    paddingVertical: spacing.m, marginTop: spacing.m, gap: spacing.s,
   },
-  terminateAllText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.error,
-    marginLeft: spacing.s,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-    gap: spacing.m,
-  },
-  emptyStateText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginTop: spacing.m,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.75)',
-    justifyContent: 'flex-end',
-  },
+  terminateAllText: { fontSize: 15, fontWeight: '600', color: colors.error, marginLeft: spacing.s },
+  emptyState: { alignItems: 'center', paddingVertical: spacing.xl, gap: spacing.m },
+  emptyStateText: { fontSize: 14, color: colors.textSecondary, textAlign: 'center', lineHeight: 22, marginTop: spacing.m },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.75)', justifyContent: 'flex-end' },
   modalContent: {
-    backgroundColor: colors.primaryBackground,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: spacing.l,
-    paddingTop: spacing.l,
+    backgroundColor: colors.primaryBackground, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    paddingHorizontal: spacing.l, paddingTop: spacing.l,
     paddingBottom: Platform.OS === 'ios' ? spacing.xl * 2 : spacing.xl,
   },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.l,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  closeButton: {
-    padding: spacing.xs,
-  },
-  scannerWrapper: {
-    alignItems: 'center',
-    paddingVertical: spacing.l,
-  },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.l },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: colors.textPrimary },
+  closeButton: { padding: spacing.xs },
+  scannerWrapper: { alignItems: 'center', paddingVertical: spacing.l },
   scannerInstructions: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    lineHeight: 20,
-    textAlign: 'center',
-    marginBottom: spacing.xl,
+    fontSize: 13, color: colors.textSecondary, lineHeight: 20,
+    textAlign: 'center', marginBottom: spacing.xl,
   },
   cameraBox: {
-    width: 220,
-    height: 220,
-    borderRadius: 24,
-    backgroundColor: colors.secondaryBackground,
-    borderWidth: 1,
-    borderColor: colors.border,
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-    position: 'relative',
-    marginBottom: spacing.xl,
+    width: 220, height: 220, borderRadius: 24, backgroundColor: colors.secondaryBackground,
+    borderWidth: 1, borderColor: colors.border, justifyContent: 'center',
+    alignItems: 'center', overflow: 'hidden', position: 'relative', marginBottom: spacing.xl,
   },
-  camIcon: {
-    zIndex: 1,
-  },
+  camIcon: { zIndex: 1 },
   scannerTarget: {
-    position: 'absolute',
-    top: '15%',
-    left: '15%',
-    right: '15%',
-    bottom: '15%',
-    borderWidth: 2,
-    borderColor: colors.primaryAccent,
-    borderRadius: 16,
-    borderStyle: 'dashed',
-    zIndex: 2,
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: 'absolute', top: '15%', left: '15%', right: '15%', bottom: '15%',
+    borderWidth: 2, borderColor: colors.primaryAccent, borderRadius: 16,
+    borderStyle: 'dashed', zIndex: 2, justifyContent: 'center', alignItems: 'center',
   },
-  spinner: {
-    zIndex: 3,
-  },
+  spinner: { zIndex: 3 },
   scannerLaser: {
-    position: 'absolute',
-    top: '20%',
-    left: '5%',
-    right: '5%',
-    height: 2,
-    backgroundColor: colors.primaryAccent,
-    shadowColor: colors.primaryAccent,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 4,
-    elevation: 5,
+    position: 'absolute', top: '20%', left: '5%', right: '5%', height: 2,
+    backgroundColor: colors.primaryAccent, shadowColor: colors.primaryAccent,
+    shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 4, elevation: 5,
   },
   primaryButton: {
-    backgroundColor: colors.primaryAccent,
-    borderRadius: 12,
-    paddingVertical: spacing.m,
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.s,
+    backgroundColor: colors.primaryAccent, borderRadius: 12, paddingVertical: spacing.m,
+    width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.s,
   },
-  primaryButtonText: {
-    color: colors.white,
-    fontWeight: '700',
-    fontSize: 15,
-  },
-  progressRow: {
-    width: '100%',
-    alignItems: 'center',
-    gap: spacing.s,
-  },
-  progressLabel: {
-    fontSize: 13,
-    color: colors.textPrimary,
-    fontWeight: '600',
-  },
-  progressBarBg: {
-    height: 6,
-    width: '100%',
-    backgroundColor: colors.cardBackground,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: colors.primaryAccent,
-  },
+  primaryButtonText: { color: colors.white, fontWeight: '700', fontSize: 15 },
+  progressRow: { width: '100%', alignItems: 'center', gap: spacing.s },
+  progressLabel: { fontSize: 13, color: colors.textPrimary, fontWeight: '600' },
+  progressBarBg: { height: 6, width: '100%', backgroundColor: colors.cardBackground, borderRadius: 3, overflow: 'hidden' },
+  progressBarFill: { height: '100%', backgroundColor: colors.primaryAccent },
 }));
 
 export default DevicesScreen;

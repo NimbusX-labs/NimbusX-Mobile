@@ -26,7 +26,7 @@ const GroupsScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const user = useAppSelector((state) => state.auth.user);
   const chats = useAppSelector(chatSelectors.selectAll);
-  const { loading } = useChats();
+  const { loading, error } = useChats();
 
   const groups = useMemo(() => chats.filter((c) => c.type === 'group'), [chats]);
 
@@ -57,15 +57,27 @@ const GroupsScreen = () => {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           !loading ? (
-            <View style={styles.empty}>
-              <View style={styles.emptyIconWrap}>
-                <Icon name="people-outline" size={48} color={colors.textTertiary} />
+            error ? (
+              <View style={styles.empty}>
+                <View style={styles.emptyIconWrap}>
+                  <Icon name="cloud-offline-outline" size={48} color={colors.error} />
+                </View>
+                <Text style={styles.emptyTitle}>Connection issue</Text>
+                <Text style={styles.emptyText}>
+                  Could not load groups. Check your connection and pull down to retry.
+                </Text>
               </View>
-              <Text style={styles.emptyTitle}>No groups yet</Text>
-              <Text style={styles.emptyText}>
-                Create a group to start chatting with multiple people.
-              </Text>
-            </View>
+            ) : (
+              <View style={styles.empty}>
+                <View style={styles.emptyIconWrap}>
+                  <Icon name="people-outline" size={48} color={colors.textTertiary} />
+                </View>
+                <Text style={styles.emptyTitle}>No groups yet</Text>
+                <Text style={styles.emptyText}>
+                  Create a group to start chatting with multiple people.
+                </Text>
+              </View>
+            )
           ) : null
         }
       />

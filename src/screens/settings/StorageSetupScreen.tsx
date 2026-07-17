@@ -2,17 +2,17 @@ import React, { useCallback } from 'react';
 import {
   View,
   Text,
-
   TouchableOpacity,
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useAppDispatch } from '@store/hooks';
+import { useAppDispatch, useAppSelector } from '@store/hooks';
 import { setStorageMode, StorageMode } from '@store/slices/authSlice';
 import { useThemeColors, createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
 import { typography } from '@theme/typography';
+import Toast from 'react-native-toast-message';
 
 interface OptionCardProps {
   icon: string;
@@ -22,22 +22,26 @@ interface OptionCardProps {
   onPress: () => void;
 }
 
-const OptionCard = ({ icon, title, description, onPress }: OptionCardProps) => {
+const OptionCard = ({ icon, title, description, selected, onPress }: OptionCardProps) => {
   const colors = useThemeColors();
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, selected && styles.cardSelected]}
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <View style={styles.cardIcon}>
-        <Icon name={icon} size={28} color={colors.primaryAccent} />
+      <View style={[styles.cardIcon, selected && styles.cardIconSelected]}>
+        <Icon name={icon} size={28} color={selected ? '#080E1A' : colors.primaryAccent} />
       </View>
       <View style={styles.cardContent}>
-        <Text style={styles.cardTitle}>{title}</Text>
+        <Text style={[styles.cardTitle, selected && styles.cardTitleSelected]}>{title}</Text>
         <Text style={styles.cardDescription}>{description}</Text>
       </View>
-      <Icon name="chevron-forward" size={20} color={colors.textTertiary} />
+      {selected ? (
+        <Icon name="checkmark-circle" size={22} color={colors.primaryAccent} />
+      ) : (
+        <Icon name="chevron-forward" size={20} color={colors.textTertiary} />
+      )}
     </TouchableOpacity>
   );
 };
@@ -45,9 +49,17 @@ const OptionCard = ({ icon, title, description, onPress }: OptionCardProps) => {
 const StorageSetupScreen = () => {
   const colors = useThemeColors();
   const dispatch = useAppDispatch();
+  const currentMode = useAppSelector((state) => state.auth.storageMode);
 
   const handleSelect = useCallback((mode: StorageMode) => {
     dispatch(setStorageMode(mode));
+    Toast.show({
+      type: 'success',
+      text1: 'Storage Mode Changed',
+      text2: mode === 'cloud' ? 'Cloud Sync enabled — your data stays in sync across devices.' : 'Local Only mode enabled — everything stays on this device.',
+      visibilityTime: 3000,
+      position: 'bottom',
+    });
   }, [dispatch]);
 
   return (
@@ -71,12 +83,14 @@ const StorageSetupScreen = () => {
             icon="phone-portrait-outline"
             title="Local Only"
             description="Everything stays on your device."
+            selected={currentMode === 'local'}
             onPress={() => handleSelect('local')}
           />
           <OptionCard
             icon="cloud-outline"
             title="Cloud Sync"
             description="Access your chats and files from anywhere."
+            selected={currentMode === 'cloud'}
             onPress={() => handleSelect('cloud')}
           />
         </View>
@@ -139,6 +153,10 @@ const styles = createThemedStyles((colors) => ({
     borderWidth: 1,
     borderColor: colors.divider,
   },
+  cardSelected: {
+    borderColor: colors.primaryAccent,
+    backgroundColor: 'rgba(6,182,212,0.06)',
+  },
   cardIcon: {
     width: 48,
     height: 48,
@@ -146,6 +164,9 @@ const styles = createThemedStyles((colors) => ({
     backgroundColor: colors.accentMuted,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  cardIconSelected: {
+    backgroundColor: colors.primaryAccent,
   },
   cardContent: {
     flex: 1,
@@ -156,6 +177,9 @@ const styles = createThemedStyles((colors) => ({
     fontWeight: '600',
     color: colors.textPrimary,
     marginBottom: 2,
+  },
+  cardTitleSelected: {
+    color: colors.primaryAccent,
   },
   cardDescription: {
     fontSize: typography.fontSize.small,

@@ -23,6 +23,7 @@ const SetupNavigator = () => (
   </SetupStack.Navigator>
 );
 import { View, StyleSheet, ActivityIndicator, Text, TouchableOpacity, Alert, StatusBar } from 'react-native';
+import Toast from 'react-native-toast-message';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 // ── App Lock PIN Overlay Screen ──────────────────────────────────────────────
@@ -395,13 +396,16 @@ const AppNavigator = () => {
   };
 
   return (
-    <NavigationContainer theme={AppTheme}>
-      <StatusBar
-        barStyle={isLightTheme ? 'dark-content' : 'light-content'}
-        backgroundColor={colors.primaryBackground}
-      />
-      {renderContent()}
-    </NavigationContainer>
+    <>
+      <NavigationContainer theme={AppTheme}>
+        <StatusBar
+          barStyle={isLightTheme ? 'dark-content' : 'light-content'}
+          backgroundColor={colors.primaryBackground}
+        />
+        {renderContent()}
+      </NavigationContainer>
+      <Toast />
+    </>
   );
 };
 

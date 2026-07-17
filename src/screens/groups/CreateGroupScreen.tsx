@@ -24,7 +24,7 @@ import { User } from '@types';
 
 type NavigationProp = StackNavigationProp<ChatStackParamList, 'CreateGroup'>;
 
-const MIN_MEMBERS = 2; // Minimum members other than the creator
+const MIN_MEMBERS = 1; // Minimum members other than the creator
 
 const CreateGroupScreen = () => {
   const colors = useThemeColors();
@@ -117,9 +117,14 @@ const CreateGroupScreen = () => {
         chatId,
         groupName: name.trim(),
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create group:', error);
-      Alert.alert('Error', 'Could not create group. Please try again.');
+      Alert.alert(
+        'Error',
+        error?.message?.includes('relation') || error?.message?.includes('does not exist')
+          ? 'Database setup required. Please run the Supabase migration for the chats table.'
+          : error?.message || 'Could not create group. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
@@ -263,7 +268,7 @@ const CreateGroupScreen = () => {
               <Icon name="people-outline" size={36} color={colors.textTertiary} />
               <Text style={styles.emptyTitle}>No contacts found</Text>
               <Text style={styles.emptyText}>
-                Add contacts first from the new-chat screen to include them in a group.
+                Go to Chats → tap + → search for users to add them as contacts first.
               </Text>
             </View>
           }
