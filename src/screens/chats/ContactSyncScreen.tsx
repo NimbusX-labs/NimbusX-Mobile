@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -31,11 +31,7 @@ const ContactSyncScreen = () => {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
 
-  useEffect(() => {
-    startSync();
-  }, []);
-
-  const startSync = async () => {
+  const startSync = useCallback(async () => {
     setSyncing(true);
     try {
       const result = await syncContacts();
@@ -48,7 +44,11 @@ const ContactSyncScreen = () => {
       setSyncing(false);
       setLoading(false);
     }
-  };
+  }, [syncContacts]);
+
+  useEffect(() => {
+    startSync();
+  }, [startSync]);
 
   const startChat = async (contact: ContactMatch) => {
     if (!currentUser) return;
@@ -69,7 +69,7 @@ const ContactSyncScreen = () => {
         typing: { [currentUser.uid]: false, [contact.uid]: false },
       });
       (navigation as any).navigate('Chat', { chatId });
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Could not start chat.');
     }
   };

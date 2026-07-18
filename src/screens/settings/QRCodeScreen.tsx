@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,6 @@ import {
   Alert,
   Share,
   Clipboard,
-  Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useAppSelector } from '@store/hooks';
@@ -21,17 +20,13 @@ import Avatar from '@components/common/Avatar';
 const QRCodeScreen = () => {
   const colors = useThemeColors();
   const user = useAppSelector((state) => state.auth.user);
-  const { getQRCode, getProfileLink, getShareCodeLink, getUserProfileLink } = useIdentity();
+  const { getQRCode, getUserProfileLink } = useIdentity();
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const profileLink = getUserProfileLink(user || {});
 
-  useEffect(() => {
-    loadQRCode();
-  }, []);
-
-  const loadQRCode = async () => {
+  const loadQRCode = useCallback(async () => {
     setLoading(true);
     try {
       const input = user?.username || user?.shareCode || '';
@@ -46,7 +41,11 @@ const QRCodeScreen = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getQRCode, user?.username, user?.shareCode]);
+
+  useEffect(() => {
+    loadQRCode();
+  }, [loadQRCode]);
 
   const handleCopyLink = () => {
     if (!profileLink) return;

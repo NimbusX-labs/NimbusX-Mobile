@@ -10,7 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useThemeColors, createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
 import { typography } from '@theme/typography';
@@ -21,7 +21,6 @@ const UsernameSetupScreen = ({ route }: any) => {
   const navigation = useNavigation();
   const params = route?.params || {};
   const uid = params.uid || '';
-  const displayName = params.displayName || '';
 
   const [username, setUsername] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -40,7 +39,7 @@ const UsernameSetupScreen = ({ route }: any) => {
       setSuggestions([]);
       setShowSuggestions(false);
     }
-  }, [username]);
+  }, [username, validateUsername]);
 
   const handleCheck = async () => {
     const normalized = username.toLowerCase().trim();

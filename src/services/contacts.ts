@@ -1,4 +1,4 @@
-import { Alert, Linking, PermissionsAndroid, Platform } from 'react-native';
+import { Linking, PermissionsAndroid, Platform } from 'react-native';
 import { normalizeToE164 } from '../utils/phone';
 import { supabase } from '../config/supabase';
 import { ProcessedContact, ContactMatch } from '@types';

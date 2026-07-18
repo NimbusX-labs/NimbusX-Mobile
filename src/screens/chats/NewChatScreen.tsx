@@ -229,7 +229,7 @@ const NewChatScreen = () => {
         style={styles.actionRow}
         onPress={() => navigation.navigate('ContactSync')}
       >
-        <View style={[styles.actionIcon, { backgroundColor: '#22c55e' }]}>
+        <View style={[styles.actionIcon, styles.actionIconGreen]}>
           <Icon name="phone-portrait-outline" size={22} color={colors.white} />
         </View>
         <Text style={styles.actionText}>Find Contacts</Text>
@@ -296,6 +296,9 @@ const styles = createThemedStyles((colors) => ({
     width: 45, height: 45, borderRadius: 22.5,
     backgroundColor: colors.primaryAccent,
     justifyContent: 'center', alignItems: 'center',
+  },
+  actionIconGreen: {
+    backgroundColor: '#22c55e',
   },
   actionText: {
     color: colors.textPrimary, fontSize: typography.fontSize.medium,

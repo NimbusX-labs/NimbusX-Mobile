@@ -26,7 +26,6 @@ import {
   blockUser,
   unblockUser,
   Visibility,
-  PhoneVisibility,
 } from '@store/slices/settingsSlice';
 import { useThemeColors, createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
@@ -34,7 +33,6 @@ import Avatar from '@components/common/Avatar';
 
 const { height } = Dimensions.get('window');
 
-type VisibilityOption = 'Everyone' | 'Contacts' | 'Nobody';
 type PhoneVisOption = 'everyone' | 'contacts' | 'nobody';
 
 const VisibilityPicker = ({

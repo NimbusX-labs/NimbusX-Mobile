@@ -28,11 +28,10 @@ const ProfileScreen = ({ navigation }: any) => {
   const colors = useThemeColors();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
-  const storageMode = useAppSelector((state) => state.auth.storageMode);
   const [displayName, setDisplayName] = useState(user?.displayName || '');
   const [loading, setLoading] = useState(false);
   const [localAvatarUri, setLocalAvatarUri] = useState<string | null>(null);
-  const { getProfileLink, getShareCodeLink, getUserProfileLink } = useIdentity();
+  const { getUserProfileLink } = useIdentity();
 
   useEffect(() => {
     if (user) {

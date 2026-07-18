@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { useAppDispatch } from '../store/hooks';
 import {
   validateUsername, normalizeUsername, RESERVED_USERNAMES,
-  canChangeUsername, isOldUsernameExpired, suggestUsernames,
+  canChangeUsername, suggestUsernames,
 } from '../utils/username';
 import { normalizeToE164, formatPhoneForDisplay } from '../utils/phone';
 import { generateShareCode, canRegenerateShareCode } from '../utils/shareCode';
@@ -13,7 +13,7 @@ import { inviteService } from '../services/invite';
 import { privacyService, PrivacySettings } from '../services/privacy';
 import { qrCodeService } from '../services/qrcode';
 import { upsertUser } from '@store/slices/userSlice';
-import { ContactMatch, SearchResult } from '@types';
+import { SearchResult } from '@types';
 
 export const useIdentity = () => {
   const dispatch = useAppDispatch();
