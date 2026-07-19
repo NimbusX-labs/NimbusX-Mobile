@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useEffect, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   FlatList,
   SafeAreaView,
@@ -12,7 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { ChatStackParamList } from '@navigation/types';
 import { useAppSelector, useAppDispatch } from '@store/hooks';
-import { chatSelectors, upsertChats, setChatsLoading } from '@store/slices/chatSlice';
+import { chatSelectors, upsertChats } from '@store/slices/chatSlice';
 import { firestoreService } from '@services/supabase/database';
 import { useChats } from '@hooks/useChats';
 import { useThemeColors, createThemedStyles } from '@theme/colors';
@@ -56,8 +56,8 @@ const GroupsScreen = () => {
     if (!user) return;
     setRefreshing(true);
     try {
-      const unsub = firestoreService.listenUserChats(user.uid, (chats) => {
-        dispatch(upsertChats(chats));
+      const unsub = firestoreService.listenUserChats(user.uid, (fetchedChats) => {
+        dispatch(upsertChats(fetchedChats));
         setRefreshing(false);
       });
       unsub();

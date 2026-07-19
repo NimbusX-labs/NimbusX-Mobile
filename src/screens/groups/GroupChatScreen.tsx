@@ -81,6 +81,7 @@ const GroupChatScreen = () => {
       firestoreService.updateMessageStatus(chatId, ids, 'delivered').catch(() => {});
       pendingSent.forEach(m => dispatch(upsertMessage({ ...m, status: 'delivered' as const })));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatId, messages.length, user?.uid]);
 
   // Mark messages as read when viewed
@@ -94,6 +95,7 @@ const GroupChatScreen = () => {
       firestoreService.updateMessageStatus(chatId, ids, 'read').catch(() => {});
       delivered.forEach(m => dispatch(upsertMessage({ ...m, status: 'read' as const })));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatId, messages.length, user?.uid]);
 
   // Listen for typing status
