@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
-import { useAppDispatch } from '../store/hooks';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { setUser } from '../store/slices/authSlice';
 import {
   validateUsername, normalizeUsername, RESERVED_USERNAMES,
   canChangeUsername, suggestUsernames,
@@ -17,6 +18,7 @@ import { SearchResult } from '@types';
 
 export const useIdentity = () => {
   const dispatch = useAppDispatch();
+  const currentAuthUser = useAppSelector(state => state.auth.user);
   const [syncing, setSyncing] = useState(false);
 
   const setUsername = useCallback(async (uid: string, username: string, currentUsername?: string, lastChangedAt?: number | null) => {
@@ -43,8 +45,16 @@ export const useIdentity = () => {
       id: uid, uid, username: normalized, usernameChangedAt: now,
     } as any));
 
+    if (currentAuthUser) {
+      dispatch(setUser({
+        ...currentAuthUser,
+        username: normalized,
+        usernameChangedAt: now,
+      }));
+    }
+
     return normalized;
-  }, [dispatch]);
+  }, [dispatch, currentAuthUser]);
 
   const checkUsernameCooldown = useCallback((lastChangedAt: number | null | undefined) => {
     return canChangeUsername(lastChangedAt);

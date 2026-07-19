@@ -382,10 +382,8 @@ export const firestoreService = {
     const { uid, ...data } = userObj;
     const email = data.email ? data.email.toLowerCase().trim() : undefined;
 
-    if (!email && !data.phoneE164) {
-      console.warn('saveUser: email or phone is required to create/update a profile');
-      return;
-    }
+    const hasData = Object.keys(data).some(k => k !== 'uid' && data[k as keyof typeof data] !== undefined);
+    if (!hasData) return;
 
     const { data: sessionData } = await supabase.auth.getSession();
     const sessionUid = sessionData.session?.user?.id;

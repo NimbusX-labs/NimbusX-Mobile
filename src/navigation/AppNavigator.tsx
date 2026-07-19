@@ -9,6 +9,7 @@ import { useThemeColors, updateThemeStyles } from '@theme/colors';
 import { useColorScheme } from 'react-native';
 import { spacing } from '@theme/spacing';
 import { cryptoService } from '@utils/crypto';
+import { User } from '@types';
 
 // Navigators
 import AuthNavigator from './AuthNavigator';
@@ -279,18 +280,12 @@ const AppNavigator = () => {
       if (!active) return;
       try {
         if (firebaseUser) {
-          let displayName = firebaseUser.displayName || '';
-          let avatarUrl = firebaseUser.avatarUrl || '';
-
+          let firestoreUser: User | null = null;
           try {
-            const firestoreUser = await withTimeout(
+            firestoreUser = await withTimeout(
               firestoreService.getUser(firebaseUser.uid),
               5000,
             );
-            if (firestoreUser) {
-              displayName = firestoreUser.displayName || displayName;
-              avatarUrl = firestoreUser.avatarUrl || avatarUrl;
-            }
           } catch (fetchErr) {
             console.warn('AppNavigator: Firestore fetch timed out or failed, using Auth data:', fetchErr);
           }
@@ -306,9 +301,16 @@ const AppNavigator = () => {
             uid: firebaseUser.uid,
             id: firebaseUser.uid,
             email: firebaseUser.email || '',
-            displayName,
-            avatarUrl,
-            publicKey,
+            displayName: firestoreUser?.displayName || firebaseUser.displayName || '',
+            avatarUrl: firestoreUser?.avatarUrl || firebaseUser.avatarUrl || '',
+            username: firestoreUser?.username,
+            shareCode: firestoreUser?.shareCode,
+            phoneE164: firestoreUser?.phoneE164,
+            bio: firestoreUser?.bio,
+            publicKey: firestoreUser?.publicKey || publicKey,
+            verificationType: firestoreUser?.verificationType || 'none',
+            usernameChangedAt: firestoreUser?.usernameChangedAt,
+            shareCodeChangedAt: firestoreUser?.shareCodeChangedAt,
           };
 
           try {
@@ -323,7 +325,7 @@ const AppNavigator = () => {
             console.warn('AppNavigator: profile save failed:', e);
           }
 
-          dispatch(setUser(mergedUser));
+          dispatch(setUser(mergedUser as User));
         } else {
           dispatch(setUser(null));
         }
