@@ -1,4 +1,9 @@
-import RNFS from 'react-native-fs';
+let RNFS: any = null;
+try {
+  RNFS = require('react-native-fs');
+} catch {
+  console.warn('react-native-fs native module not linked yet');
+}
 import { decode } from 'base64-arraybuffer';
 import { supabase } from '../../config/supabase';
 import { cacheService } from '../cacheService';
@@ -14,6 +19,8 @@ export interface MediaUploadResult {
 }
 
 const resolveUriToLocalPath = async (uri: string, mimeType: string): Promise<{ localPath: string; isTemp: boolean }> => {
+  if (!RNFS) return { localPath: uri, isTemp: false };
+
   if (uri.startsWith('content://')) {
     const ext = mimeType.split('/')[1]?.replace(/[^a-z0-9.]+/gi, '_') || 'tmp';
     const tempFileName = `temp_${Date.now()}.${ext}`;
@@ -58,6 +65,8 @@ const getFileSize = async (fileUri: string, mimeType: string) => {
 };
 
 const uploadToBucket = async (bucket: string, path: string, fileUri: string, mimeType: string) => {
+  if (!RNFS) throw new Error('File system module not available');
+
   const { localPath, isTemp } = await resolveUriToLocalPath(fileUri, mimeType);
 
   try {

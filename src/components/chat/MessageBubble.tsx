@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, Linking } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { Message } from '@types';
@@ -21,22 +21,24 @@ interface MessageBubbleProps {
 const getFileName = (message: Message) => {
   if (message.mediaPath) {
     const parts = message.mediaPath.split('/');
-    return parts[parts.length - 1];
+    const name = parts[parts.length - 1];
+    if (name) return name;
   }
   if (message.mediaUrl) {
     try {
       const decodedUrl = decodeURIComponent(message.mediaUrl);
-      const urlParts = decodedUrl.split('?')[0].split('/');
-      return urlParts[urlParts.length - 1];
+      const name = decodedUrl.split('?')[0].split('/').filter(Boolean).pop();
+      if (name) return name;
     } catch {
       // ignore
     }
   }
-  return message.mediaType === 'audio' ? 'Audio file' : 'File';
+  const labels: Record<string, string> = { image: 'Image', video: 'Video', audio: 'Audio', file: 'File', gif: 'GIF', sticker: 'Sticker' };
+  return labels[message.mediaType || ''] || 'File';
 };
 
 const formatFileSize = (bytes?: number) => {
-  if (!bytes) return '';
+  if (bytes === undefined || bytes === null || bytes <= 0) return '';
   if (bytes < 1024) return `${bytes} B`;
   const kb = bytes / 1024;
   if (kb < 1024) return `${kb.toFixed(1)} KB`;
@@ -44,9 +46,31 @@ const formatFileSize = (bytes?: number) => {
   return `${mb.toFixed(1)} MB`;
 };
 
+const getFileTypeLabel = (message: Message) => {
+  const name = getFileName(message);
+  const ext = name.split('.').pop()?.toLowerCase() || '';
+  const typeMap: Record<string, string> = {
+    jpg: 'JPEG Image', jpeg: 'JPEG Image', png: 'PNG Image',
+    gif: 'GIF Image', webp: 'WebP Image', bmp: 'BMP Image',
+    svg: 'SVG Image', mp4: 'MP4 Video', mov: 'MOV Video',
+    avi: 'AVI Video', mkv: 'MKV Video', webm: 'WebM Video',
+    mp3: 'MP3 Audio', wav: 'WAV Audio', aac: 'AAC Audio',
+    ogg: 'OGG Audio', flac: 'FLAC Audio', pdf: 'PDF Document',
+    doc: 'Word Document', docx: 'Word Document',
+    xls: 'Excel Spreadsheet', xlsx: 'Excel Spreadsheet',
+    ppt: 'PowerPoint', pptx: 'PowerPoint',
+    zip: 'ZIP Archive', rar: 'RAR Archive', '7z': '7z Archive',
+    tar: 'TAR Archive', gz: 'GZip Archive',
+    txt: 'Text File', json: 'JSON File', xml: 'XML File',
+    csv: 'CSV File',
+  };
+  return typeMap[ext] || `${ext.toUpperCase()} File` || 'File';
+};
+
 const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMine, onLongPress, onPressImage }) => {
   const colors = useThemeColors();
   const hasMedia = !!message.mediaUrl;
+  const [imgError, setImgError] = useState(false);
   const isImage = message.mediaType === 'image';
   const isVideo = message.mediaType === 'video';
   const isGif = message.mediaType === 'gif';
@@ -183,11 +207,19 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMine, onLongPr
         {hasMedia && isImage && (
           <View style={styles.imageLayout}>
             <TouchableOpacity onPress={handlePressImage} activeOpacity={0.85}>
-              <Image
-                source={{ uri: message.mediaUrl }}
-                style={styles.mediaImage}
-                resizeMode="cover"
-              />
+              {imgError ? (
+                <View style={[styles.mediaImage, styles.imageErrorContainer]}>
+                  <Icon name="image-outline" size={32} color={colors.textTertiary} />
+                  <Text style={styles.imageErrorText}>Image unavailable</Text>
+                </View>
+              ) : (
+                <Image
+                  source={{ uri: message.mediaUrl }}
+                  style={styles.mediaImage}
+                  resizeMode="cover"
+                  onError={() => setImgError(true)}
+                />
+              )}
             </TouchableOpacity>
             <View style={styles.imagePanel}>
               <View style={styles.imageInfo}>
@@ -195,7 +227,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isMine, onLongPr
                   {getFileName(message)}
                 </Text>
                 <Text style={styles.imageSubtitle}>
-                  {message.mediaSize ? `${formatFileSize(message.mediaSize)} • ` : ''}PNG Image
+                  {message.mediaSize ? `${formatFileSize(message.mediaSize)} • ` : ''}{getFileTypeLabel(message)}
                 </Text>
               </View>
               <TouchableOpacity style={styles.downloadCircle} onPress={openUrl} activeOpacity={0.7}>
@@ -351,6 +383,16 @@ const styles = createThemedStyles((colors) => ({
   mediaImage: {
     width: '100%',
     height: 180,
+  },
+  imageErrorContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    gap: 6,
+  },
+  imageErrorText: {
+    color: colors.textTertiary,
+    fontSize: 12,
   },
   imagePanel: {
     flexDirection: 'row',

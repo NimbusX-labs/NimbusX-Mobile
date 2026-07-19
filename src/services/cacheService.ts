@@ -27,15 +27,21 @@ export const cacheService = {
       }
       
       const destPath = `${mediaDir}/${filename}`;
-      
-      // Check if already exists
+
       const exists = await RNFS.exists(destPath);
       if (!exists) {
-        let cleanUri = sourceUri;
-        if (cleanUri.startsWith('file://')) {
-          cleanUri = decodeURIComponent(cleanUri.replace('file://', ''));
+        let copySource = sourceUri;
+        if (copySource.startsWith('content://')) {
+          const tempPath = `${RNFS.CachesDirectoryPath}/cache_${Date.now()}_${filename}`;
+          await RNFS.copyFile(copySource, tempPath);
+          copySource = tempPath;
+        } else if (copySource.startsWith('file://')) {
+          copySource = decodeURIComponent(copySource.replace('file://', ''));
         }
-        await RNFS.copyFile(cleanUri, destPath);
+        await RNFS.copyFile(copySource, destPath);
+        if (sourceUri.startsWith('content://')) {
+          try { await RNFS.unlink(copySource); } catch { /* ignore */ }
+        }
       }
       return `file://${destPath}`;
     } catch (error) {
