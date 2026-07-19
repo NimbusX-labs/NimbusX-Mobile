@@ -28,9 +28,20 @@ export const searchService = {
 
     if (trimmed.startsWith('@')) {
       const username = stripAtSymbol(trimmed).toLowerCase();
-      const { data } = await supabase
-        .rpc('search_profile_by_username', { p_username: username });
-      for (const profile of data || []) {
+      const [{ data: exactData }, { data: fuzzyData }] = await Promise.all([
+        supabase.rpc('search_profile_by_username', { p_username: username }),
+        supabase
+          .from('profiles')
+          .select('id, username, share_code, display_name, avatar_url, phone_e164, verification_type')
+          .ilike('username', `${username}%`)
+          .neq('id', currentUid)
+          .limit(10),
+      ]);
+      for (const profile of exactData || []) {
+        const r = addResult(profile);
+        if (r) results.push(r);
+      }
+      for (const profile of fuzzyData || []) {
         const r = addResult(profile);
         if (r) results.push(r);
       }
