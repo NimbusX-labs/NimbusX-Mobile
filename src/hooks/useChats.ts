@@ -63,10 +63,9 @@ export const useChats = () => {
     dispatch(setChatsLoading(true));
     try {
       const unsubscribe = firestoreService.listenUserChats(user.uid, (chats: Chat[]) => {
+        setError(null);
         const deduped = deduplicateChats(chats, (idsToDelete) => {
-          // Remove from Redux immediately
           idsToDelete.forEach(id => dispatch(removeChat(id)));
-          // Delete duplicates from Firestore in the background
           idsToDelete.forEach(id => {
             firestoreService.deleteChat(id).catch(err =>
               console.warn('Failed to delete duplicate chat:', id, err)

@@ -1,17 +1,19 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useEffect, useState } from 'react';
 import {
   FlatList,
   SafeAreaView,
   Text,
   TouchableOpacity,
   View,
+  RefreshControl,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { ChatStackParamList } from '@navigation/types';
-import { useAppSelector } from '@store/hooks';
-import { chatSelectors } from '@store/slices/chatSlice';
+import { useAppSelector, useAppDispatch } from '@store/hooks';
+import { chatSelectors, upsertChats, setChatsLoading } from '@store/slices/chatSlice';
+import { firestoreService } from '@services/supabase/database';
 import { useChats } from '@hooks/useChats';
 import { useThemeColors, createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
@@ -24,9 +26,11 @@ type NavigationProp = StackNavigationProp<ChatStackParamList>;
 const GroupsScreen = () => {
   const colors = useThemeColors();
   const navigation = useNavigation<NavigationProp>();
+  const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
   const chats = useAppSelector(chatSelectors.selectAll);
   const { loading, error } = useChats();
+  const [refreshing, setRefreshing] = useState(false);
 
   const groups = useMemo(() => chats.filter((c) => c.type === 'group'), [chats]);
 
@@ -48,6 +52,20 @@ const GroupsScreen = () => {
     [openGroup, user?.uid]
   );
 
+  const onRefresh = useCallback(async () => {
+    if (!user) return;
+    setRefreshing(true);
+    try {
+      const unsub = firestoreService.listenUserChats(user.uid, (chats) => {
+        dispatch(upsertChats(chats));
+        setRefreshing(false);
+      });
+      unsub();
+    } catch {
+      setRefreshing(false);
+    }
+  }, [user, dispatch]);
+
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
@@ -55,6 +73,9 @@ const GroupsScreen = () => {
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primaryAccent} />
+        }
         ListEmptyComponent={
           !loading ? (
             error ? (
@@ -63,8 +84,8 @@ const GroupsScreen = () => {
                   <Icon name="cloud-offline-outline" size={48} color={colors.error} />
                 </View>
                 <Text style={styles.emptyTitle}>Connection issue</Text>
-                <Text style={styles.emptyText}>
-                  Could not load groups. Check your connection and pull down to retry.
+                <Text style={styles.emptyText} onPress={onRefresh}>
+                  Tap to retry or pull down to refresh.
                 </Text>
               </View>
             ) : (

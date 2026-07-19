@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { 
   View, 
   FlatList, 
@@ -15,10 +15,12 @@ import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
 import { messagesSelectors, upsertMessage, removeMessage, addToOfflineQueue } from '@store/slices/messageSlice';
+import { userSelectors } from '@store/slices/userSlice';
 import { ChatStackParamList } from '@navigation/types';
 import { useMessages } from '@hooks/useMessages';
 import { firestoreService } from '@services/supabase/database';
 import { storageService } from '@services/supabase/storage';
+import { supabase } from '../../config/supabase';
 import { ChatAttachment, createOptimisticMediaMessage, sendMediaMessage } from '@services/chatMedia';
 import { useThemeColors, createThemedStyles } from '@theme/colors';
 import { spacing } from '@theme/spacing';
@@ -58,6 +60,9 @@ const GroupChatScreen = () => {
 
   // Edit message state
   const [editingMessage, setEditingMessage] = React.useState<Message | null>(null);
+  const [typingText, setTypingText] = React.useState('');
+
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const messages = useAppSelector((state) => 
     messagesSelectors.selectAll(state).filter(m => m.chatId === chatId)
@@ -65,9 +70,79 @@ const GroupChatScreen = () => {
 
   const { loadMore } = useMessages(chatId);
 
+  // Mark messages as delivered when loaded
+  useEffect(() => {
+    if (!user || !messages.length) return;
+    const pendingSent = messages.filter(
+      m => m.senderId !== user.uid && (m.status === 'sent' || m.status === 'pending')
+    );
+    if (pendingSent.length > 0) {
+      const ids = pendingSent.map(m => m.id);
+      firestoreService.updateMessageStatus(chatId, ids, 'delivered').catch(() => {});
+      pendingSent.forEach(m => dispatch(upsertMessage({ ...m, status: 'delivered' as const })));
+    }
+  }, [chatId, messages.length, user?.uid]);
+
+  // Mark messages as read when viewed
+  useEffect(() => {
+    if (!user || !messages.length) return;
+    const delivered = messages.filter(
+      m => m.senderId !== user.uid && m.status === 'delivered'
+    );
+    if (delivered.length > 0) {
+      const ids = delivered.map(m => m.id);
+      firestoreService.updateMessageStatus(chatId, ids, 'read').catch(() => {});
+      delivered.forEach(m => dispatch(upsertMessage({ ...m, status: 'read' as const })));
+    }
+  }, [chatId, messages.length, user?.uid]);
+
+  // Listen for typing status
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`typing-${chatId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'chats', filter: `id=eq.${chatId}` },
+        (payload) => {
+          const typing = (payload.new as any)?.typing || {};
+          const typingNames: string[] = [];
+          for (const [uid, isTyping] of Object.entries(typing)) {
+            if (uid !== user.uid && isTyping) {
+              const name = userMap.current[uid] || `User ${uid.substring(0, 4)}`;
+              typingNames.push(name);
+            }
+          }
+          if (typingNames.length === 1) {
+            setTypingText(`${typingNames[0]} is typing...`);
+          } else if (typingNames.length > 1) {
+            setTypingText(`${typingNames[0]} and ${typingNames.length - 1} others are typing...`);
+          } else {
+            setTypingText('');
+          }
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [chatId, user]);
+
   // Pinned messages
   const pinnedMessages = messages.filter((m) => m.isPinned);
   const latestPinnedMessage = pinnedMessages[0];
+
+  // Typing handler
+  const handleTyping = useCallback((isTyping: boolean) => {
+    if (!user) return;
+    firestoreService.setTypingStatus(chatId, user.uid, isTyping);
+    if (isTyping && typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    if (isTyping) {
+      typingTimeoutRef.current = setTimeout(() => {
+        firestoreService.setTypingStatus(chatId, user.uid, false);
+      }, 3000);
+    }
+  }, [chatId, user]);
 
   // Stable render function for headerRight
   const renderHeaderRight = useCallback(
@@ -82,6 +157,11 @@ const GroupChatScreen = () => {
       headerRight: renderHeaderRight,
     });
   }, [navigation, groupName, renderHeaderRight]);
+
+  // Resolve sender name
+  const allUsers = useAppSelector(userSelectors.selectAll);
+  const userMap = useRef<Record<string, string>>({});
+  allUsers.forEach(u => { userMap.current[u.uid] = u.displayName; });
 
   const handleSend = async (text: string) => {
     if (!user) return;
@@ -357,7 +437,9 @@ const GroupChatScreen = () => {
           renderItem={({ item }) => (
             <View>
               {item.senderId !== user?.uid && (
-                <Text style={styles.senderName}>User {item.senderId.substring(0, 4)}</Text>
+                <Text style={styles.senderName}>
+                  {userMap.current[item.senderId] || `User ${item.senderId.substring(0, 4)}`}
+                </Text>
               )}
               <MessageBubble 
                 message={item} 
@@ -372,10 +454,15 @@ const GroupChatScreen = () => {
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
           contentContainerStyle={styles.listContent}
+          ListFooterComponent={
+            typingText ? (
+              <Text style={styles.typingIndicator}>{typingText}</Text>
+            ) : null
+          }
         />
         <ChatInput
           onSend={handleSend}
-          onTyping={() => {}}
+          onTyping={handleTyping}
           onSendMedia={handleSendMedia}
           onSendGif={handleSendGif}
           onSendSticker={handleSendSticker}
@@ -412,6 +499,13 @@ const styles = createThemedStyles((colors) => ({
     marginLeft: spacing.xl,
     marginBottom: -spacing.xs,
     fontWeight: '600',
+  },
+  typingIndicator: {
+    color: colors.textTertiary,
+    fontSize: 11,
+    fontStyle: 'italic',
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.xs,
   },
   // ── Pinned Banner Styles ──
   pinnedBanner: {
