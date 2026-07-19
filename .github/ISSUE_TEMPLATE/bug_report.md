@@ -3,7 +3,8 @@ name: Bug Report
 about: Report a bug to help us improve NimbusX
 title: "[BUG] "
 labels: bug
-assignees: ""
+assignees: ''
+
 ---
 
 ## Description
